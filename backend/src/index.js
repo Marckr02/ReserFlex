@@ -7,8 +7,18 @@ const businessRoutes = require('./routes/business.routes');
 
 const app = express();
 
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173'
+  origin: (origin, callback) => {
+    const normalizedOrigin = origin?.replace(/\/$/, '');
+    const normalizedFrontend = frontendUrl.replace(/\/$/, '');
+    if (!origin || normalizedOrigin === normalizedFrontend) {
+      callback(null, true);
+    } else {
+      callback(new Error('No permitido por CORS'));
+    }
+  },
+  credentials: true
 }));
 app.use(express.json());
 
