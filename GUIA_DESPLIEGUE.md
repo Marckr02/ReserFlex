@@ -14,7 +14,7 @@
 cd reservflex
 git init
 git add .
-git commit -m "Initial commit - ReserFlex Sprint 1"
+git commit -m "Initial commit - ReserFlex"
 git branch -M main
 git remote add origin https://github.com/TU_USUARIO/reservflex.git
 git push -u origin main
@@ -27,7 +27,7 @@ git push -u origin main
 1. Ir a [railway.app](https://railway.app)
 2. Click en **"New Project"**
 3. Seleccionar **"Empty Project"**
-4. Click en **"+ New"** → **"Database"** → **"PostgreSQL"
+4. Click en **"+ New"** → **"Database"** → **"PostgreSQL"**
 5. Esperar a que se aprovisione
 6. En la pestaña **"Variables"**, copiar la `DATABASE_URL`
    - Formato: `postgresql://usuario:password@host:5432/db`
@@ -38,13 +38,13 @@ git push -u origin main
 
 1. En Railway, click en **"+ New"** → **"GitHub Repo"**
 2. Seleccionar tu repositorio `reservflex`
-3. En **"Root Directory"** escribir: `backend`
+3. **IMPORTANTE:** En **"Root Directory"** escribir: `backend`
 4. En **"Variables"**, agregar:
 
 | Variable | Valor |
 |----------|-------|
 | `DATABASE_URL` | (la de PostgreSQL) |
-| `JWT_SECRET` | Una cadena segura larga (genera una aleatoria) |
+| `JWT_SECRET` | Una cadena segura larga (mínimo 32 caracteres) |
 | `JWT_EXPIRES_IN` | `7d` |
 | `GMAIL_USER` | `tuemail@gmail.com` |
 | `GMAIL_PASS` | (contraseña de aplicación de Gmail) |
@@ -52,7 +52,7 @@ git push -u origin main
 | `PORT` | `3000` |
 
 5. Click en **"Deploy"**
-6. Esperar a que termine el build
+6. Esperar a que termine el build (puede tomar 2-3 minutos)
 7. Copiar la URL del backend (ej: `https://reservflex-backend.up.railway.app`)
 
 ### Importante: Correr migraciones
@@ -66,7 +66,7 @@ npm install -g @railway/cli
 # Login
 railway login
 
-# linked al proyecto
+# Vincular al proyecto
 railway link
 
 # Ejecutar migración
@@ -80,12 +80,12 @@ railway run npx prisma migrate deploy
 1. Ir a [vercel.com](https://vercel.com)
 2. Click en **"Add New..."** → **"Project"**
 3. Seleccionar tu repositorio `reservflex`
-4. En **"Root Directory"** seleccionar: `frontend`
+4. **IMPORTANTE:** En **"Root Directory"** seleccionar: `frontend`
 5. En **"Environment Variables"**, agregar:
 
 | Variable | Valor |
 |----------|-------|
-| `VITE_API_URL` | `https://tu-backend.railway.app/api` |
+| `VITE_API_URL` | `https://tu-backend.up.railway.app/api` |
 
 6. Click en **"Deploy"**
 7. Obtendrás una URL como: `https://reservflex-frontend.vercel.app`
@@ -94,14 +94,14 @@ railway run npx prisma migrate deploy
 
 ## Paso 5: Actualizar URLs en Backend
 
-En Railway, actualizar:
+**Antes de crear el Super Admin**, en Railway actualizar:
 - `FRONTEND_URL` = `https://tu-app.vercel.app` (tu URL de Vercel)
 
 ---
 
 ## Paso 6: Crear Super Admin
 
-Una vez desplegado el backend, ejecutar el script para crear el Super Admin:
+Una vez desplegado el backend y las migraciones, ejecutar el script para crear el Super Admin:
 
 ```bash
 railway run node scripts/createSuperAdmin.js
@@ -132,9 +132,14 @@ Para que funcione el envío de correos:
 4. Usar esa contraseña de 16 caracteres en `GMAIL_PASS`
 
 ### Errores comunes
-- **502 Bad Gateway**: Revisar que el backend esté corriendo y la URL sea correcta
-- **CORS error**: Verificar que `FRONTEND_URL` en backend coincida con tu URL de Vercel
-- **Database connection**: Revisar que `DATABASE_URL` sea correcta
+
+| Error | Solución |
+|-------|----------|
+| **502 Bad Gateway** | Revisar que el backend esté corriendo y la URL sea correcta |
+| **CORS error** | Verificar que `FRONTEND_URL` en backend coincida con tu URL de Vercel |
+| **Database connection** | Revisar que `DATABASE_URL` sea correcta |
+| **Build failed** | Verificar que el Root Directory sea `backend` en Railway y `frontend` en Vercel |
+| **Prisma error** | Asegúrate de ejecutar `npx prisma migrate deploy` después del deploy |
 
 ---
 
@@ -151,4 +156,16 @@ npm run dev
 cd frontend
 npm install
 npm run dev
+```
+
+### Archivo .env del backend (local)
+
+```env
+DATABASE_URL=postgresql://usuario:password@host:5432/db
+JWT_SECRET=tu_secreto_muy_largo
+JWT_EXPIRES_IN=7d
+GMAIL_USER=tuemail@gmail.com
+GMAIL_PASS=xxxx xxxx xxxx xxxx
+FRONTEND_URL=http://localhost:5173
+PORT=3000
 ```
