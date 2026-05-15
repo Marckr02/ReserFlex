@@ -82,7 +82,8 @@ const login = async (req, res) => {
       return res.status(401).json({ message: 'Credenciales no válidas' });
     }
 
-    if (!user.verified) {
+    // El Super Admin puede iniciar sesión sin verificar correo
+    if (!user.verified && user.role !== 'SUPER_ADMIN') {
       return res.status(401).json({ message: 'Debes verificar tu correo primero' });
     }
 

@@ -85,7 +85,7 @@ railway run npx prisma migrate deploy
 
 | Variable | Valor |
 |----------|-------|
-| `VITE_API_URL` | `https://tu-backend.up.railway.app/api` |
+| `VITE_API_URL` | `https://reserflex-production.up.railway.app/api` |
 
 6. Click en **"Deploy"**
 7. Obtendrás una URL como: `https://reservflex-frontend.vercel.app`
@@ -116,9 +116,9 @@ Credenciales iniciales:
 ## URLs de Producción
 
 Al final tendrás:
-- **Backend:** `https://reservflex-backend.up.railway.app`
-- **Frontend:** `https://reservflex-frontend.vercel.app`
-- **API:** `https://reservflex-backend.up.railway.app/api`
+- **Backend:** `https://reserflex-production.up.railway.app`
+- **Frontend:** `https://tu-app.vercel.app`
+- **API:** `https://reserflex-production.up.railway.app/api`
 
 ---
 
