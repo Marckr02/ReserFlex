@@ -3,7 +3,7 @@ const https = require('https');
 const sendEmail = (to, subject, htmlContent) => {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify({
-      sender: { name: 'ReserFlex', email: 'noreply@reservflex.com' },
+      sender: { name: 'ReserFlex', email: 'marco2002rios@gmail.com' },
       to: [{ email: to }],
       subject,
       htmlContent
