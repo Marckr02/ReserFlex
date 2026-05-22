@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import api from '../services/api'
 
 const BUSINESS_TYPES = {
@@ -86,9 +86,19 @@ export default function BusinessPortal() {
             <p className="text-gray-600 mb-6">
               Sistema de reservas en línea. Selecciona el servicio y horario disponibles.
             </p>
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-800">
-              <p className="font-medium">Funcionalidad disponible en Sprint 2</p>
-              <p className="text-sm mt-1">Próximamente podrás reservar tu cita aquí.</p>
+            <div className="grid gap-3 sm:grid-cols-2 max-w-xl mx-auto">
+              <Link
+                to={`/catalogo/${slug}`}
+                className="rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white hover:bg-blue-700"
+              >
+                Ver catálogo
+              </Link>
+              <Link
+                to={`/reservar/${slug}`}
+                className="rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white hover:bg-slate-700"
+              >
+                Reservar ahora
+              </Link>
             </div>
           </div>
         </div>

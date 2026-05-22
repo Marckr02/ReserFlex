@@ -10,9 +10,10 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('token')
     const role = localStorage.getItem('role')
     const name = localStorage.getItem('name')
+    const businessId = localStorage.getItem('businessId')
 
     if (token) {
-      setUser({ token, role, name })
+      setUser({ token, role, name, businessId })
     }
     setLoading(false)
   }, [])
@@ -21,13 +22,19 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('token', data.token)
     localStorage.setItem('role', data.role)
     localStorage.setItem('name', data.name || '')
-    setUser({ token: data.token, role: data.role, name: data.name })
+    if (data.businessId) {
+      localStorage.setItem('businessId', data.businessId)
+    } else {
+      localStorage.removeItem('businessId')
+    }
+    setUser({ token: data.token, role: data.role, name: data.name, businessId: data.businessId || null })
   }
 
   const logout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('role')
     localStorage.removeItem('name')
+    localStorage.removeItem('businessId')
     setUser(null)
   }
 

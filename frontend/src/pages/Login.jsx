@@ -4,10 +4,10 @@ import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 
 const ROLE_ROUTES = {
-  SUPER_ADMIN: '/admin/negocios',
-  ADMIN_NEGOCIO: '/admin/dashboard',
-  EMPLEADO: '/admin/empleado',
-  CLIENTE: '/'
+  SUPER_ADMIN: '/admin',
+  ADMIN_NEGOCIO: '/admin/servicios',
+  EMPLEADO: '/empleado/agenda',
+  CLIENTE: '/mis-reservas'
 }
 
 export default function Login() {

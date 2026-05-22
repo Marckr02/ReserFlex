@@ -3,8 +3,17 @@ import { AuthProvider } from './context/AuthContext'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import VerifyEmail from './pages/VerifyEmail'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword  from './pages/ResetPassword'
 import Dashboard from './pages/Dashboard'
 import BusinessPortal from './pages/BusinessPortal'
+import Horarios from './pages/admin/Horarios'
+import Servicios from './pages/admin/Servicios'
+import Empleados from './pages/admin/Empleados'
+import Catalogo from './pages/cliente/Catalogo'
+import Reservar from './pages/cliente/Reservar'
+import MisReservas from './pages/cliente/MisReservas'
+import Agenda from './pages/empleado/Agenda'
 
 const PrivateRoute = ({ children, roles }) => {
   const token = localStorage.getItem('token')
@@ -29,6 +38,12 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify" element={<VerifyEmail />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password"  element={<ResetPassword />} />
+          <Route path="/catalogo/:slug" element={<Catalogo />} />
+          <Route path="/reservar/:slug" element={<Reservar />} />
+          <Route path="/mis-reservas" element={<MisReservas />} />
+          <Route path="/empleado/agenda" element={<Agenda />} />
           <Route
             path="/admin/*"
             element={
@@ -37,6 +52,9 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route path="/admin/horarios" element={<PrivateRoute roles={['SUPER_ADMIN', 'ADMIN_NEGOCIO']}><Horarios /></PrivateRoute>} />
+          <Route path="/admin/servicios" element={<PrivateRoute roles={['SUPER_ADMIN', 'ADMIN_NEGOCIO']}><Servicios /></PrivateRoute>} />
+          <Route path="/admin/empleados" element={<PrivateRoute roles={['SUPER_ADMIN', 'ADMIN_NEGOCIO']}><Empleados /></PrivateRoute>} />
           <Route path="/" element={<Navigate to="/login" />} />
           <Route
             path="/reservas/:slug"

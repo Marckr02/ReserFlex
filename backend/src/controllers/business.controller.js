@@ -113,4 +113,21 @@ const getBusinessBySlug = async (req, res) => {
   }
 };
 
-module.exports = { createBusiness, getAllBusinesses, getBusinessBySlug };
+// PATCH /api/business/:id/toggle
+const toggleBusiness = async (req, res) => {
+  try {
+    const business = await prisma.business.findUnique({ where: { id: req.params.id } });
+    if (!business) return res.status(404).json({ message: 'Negocio no encontrado' });
+
+    const updated = await prisma.business.update({
+      where: { id: req.params.id },
+      data: { active: !business.active }
+    });
+    res.json({ message: `Negocio ${updated.active ? 'activado' : 'desactivado'}`, active: updated.active });
+  } catch (err) {
+    console.error('Error toggleBusiness:', err);
+    res.status(500).json({ message: 'Error al actualizar negocio' });
+  }
+};
+
+module.exports = { createBusiness, getAllBusinesses, getBusinessBySlug, toggleBusiness };

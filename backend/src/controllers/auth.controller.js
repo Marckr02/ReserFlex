@@ -2,7 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const { sendVerificationEmail } = require('../services/mail.service');
+const { sendVerificationEmail, sendResetEmail } = require('../services/mail.service');
 
 const prisma = new PrismaClient();
 
@@ -108,7 +108,8 @@ const login = async (req, res) => {
       token,
       role: user.role,
       name: user.name,
-      email: user.email
+      email: user.email,
+      businessId: user.businessId || null
     });
   } catch (error) {
     console.error('Error en login:', error);
@@ -116,4 +117,51 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, verifyEmail, login };
+// POST /api/auth/forgot-password
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await prisma.user.findUnique({ where: { email } });
+    // Siempre responder 200 para no revelar si el correo existe
+    if (!user) return res.json({ message: 'Si el correo existe recibirás un enlace' });
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 60 minutos
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { resetToken, resetExpires }
+    });
+
+    await sendResetEmail(email, resetToken);
+    res.json({ message: 'Si el correo existe recibirás un enlace' });
+  } catch (err) {
+    console.error('Error en forgotPassword:', err);
+    res.status(500).json({ message: 'Error en el servidor' });
+  }
+};
+
+// POST /api/auth/reset-password
+const resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    const user = await prisma.user.findFirst({
+      where: { resetToken: token, resetExpires: { gt: new Date() } }
+    });
+
+    if (!user) return res.status(400).json({ message: 'El enlace expiró o es inválido' });
+
+    const hashed = await bcrypt.hash(password, 10);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashed, resetToken: null, resetExpires: null }
+    });
+
+    res.json({ message: 'Contraseña actualizada correctamente' });
+  } catch (err) {
+    console.error('Error en resetPassword:', err);
+    res.status(500).json({ message: 'Error en el servidor' });
+  }
+};
+
+module.exports = { register, verifyEmail, login, forgotPassword, resetPassword }; 

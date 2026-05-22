@@ -83,4 +83,55 @@ const sendCredentialsEmail = async (to, password) => {
   }
 };
 
-module.exports = { sendVerificationEmail, sendCredentialsEmail };
+const sendResetEmail = async (to, token) => {
+  const link = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+  try {
+    await sendEmail(to, 'Restablece tu contraseña — ReserFlex', `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+        <h2 style="color:#2563eb">Restablecer contraseña</h2>
+        <p>Haz clic en el botón para crear una nueva contraseña. El enlace expira en 60 minutos.</p>
+        <a href="${link}" style="display:inline-block;background:#2563eb;color:white;
+          padding:12px 24px;text-decoration:none;border-radius:6px;margin:16px 0">
+          Restablecer contraseña
+        </a>
+        <p style="color:#6b7280;font-size:14px">Si no solicitaste esto, ignora este correo.</p>
+      </div>
+    `);
+    console.log(`📧 Correo de recuperación enviado a ${to}`);
+  } catch (error) {
+    console.error('❌ Error enviando reset:', error.message);
+    throw new Error('No se pudo enviar el correo de recuperación');
+  }
+};
+
+const sendConfirmationEmail = async (to, reservation, accessCode = null) => {
+  const fecha = new Date(reservation.startTime).toLocaleString('es-EC', {
+    dateStyle: 'full', timeStyle: 'short', timeZone: 'America/Guayaquil'
+  });
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+      <h2 style="color:#2563eb">¡Reserva confirmada!</h2>
+      <div style="background:#f3f4f6;padding:16px;border-radius:8px;margin:16px 0">
+        <p><strong>Negocio:</strong> ${reservation.business?.name || ''}</p>
+        <p><strong>Servicio:</strong> ${reservation.service?.name || ''}</p>
+        <p><strong>Fecha y hora:</strong> ${fecha}</p>
+        ${reservation.employee ? `<p><strong>Empleado:</strong> ${reservation.employee.name}</p>` : ''}
+        ${accessCode ? `<p><strong>Código de acceso:</strong> ${accessCode}</p>` : ''}
+      </div>
+      <a href="${process.env.FRONTEND_URL}/mis-reservas"
+        style="display:inline-block;background:#2563eb;color:white;padding:12px 24px;
+        text-decoration:none;border-radius:6px">Ver mis reservas</a>
+    </div>
+  `;
+
+  try {
+    await sendEmail(to, '¡Tu reserva está confirmada! — ReserFlex', html);
+    console.log(`📧 Confirmación de reserva enviada a ${to}`);
+  } catch (err) {
+    console.error('❌ Error enviando confirmación:', err.message);
+    throw new Error('No se pudo enviar la confirmación');
+  }
+};
+
+module.exports = { sendVerificationEmail, sendCredentialsEmail, sendResetEmail, sendConfirmationEmail };

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 
@@ -247,6 +247,21 @@ export default function Dashboard() {
         </nav>
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid gap-4 md:grid-cols-3 mb-6">
+            <Link to="/admin/horarios" className="bg-white rounded-lg shadow p-5 hover:shadow-md transition">
+              <h3 className="font-bold text-gray-800">Horarios</h3>
+              <p className="text-sm text-gray-500 mt-1">Configura la disponibilidad semanal.</p>
+            </Link>
+            <Link to="/admin/servicios" className="bg-white rounded-lg shadow p-5 hover:shadow-md transition">
+              <h3 className="font-bold text-gray-800">Servicios</h3>
+              <p className="text-sm text-gray-500 mt-1">Administra el catálogo y precios.</p>
+            </Link>
+            <Link to="/admin/empleados" className="bg-white rounded-lg shadow p-5 hover:shadow-md transition">
+              <h3 className="font-bold text-gray-800">Empleados</h3>
+              <p className="text-sm text-gray-500 mt-1">Asigna servicios al personal.</p>
+            </Link>
+          </div>
+
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Panel de Administración</h2>
             <p className="text-gray-600">Gestiona las reservas de tu negocio.</p>

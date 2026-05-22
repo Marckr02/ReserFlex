@@ -4,6 +4,10 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/auth.routes');
 const businessRoutes = require('./routes/business.routes');
+const scheduleRoutes    = require('./routes/schedule.routes');
+const serviceRoutes     = require('./routes/service.routes');
+const employeeRoutes    = require('./routes/employee.routes');
+const reservationRoutes = require('./routes/reservation.routes');
 
 const app = express();
 
@@ -40,6 +44,10 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/business', businessRoutes);
+app.use('/api/schedules',    scheduleRoutes);
+app.use('/api/services',     serviceRoutes);
+app.use('/api/employees',    employeeRoutes);
+app.use('/api/reservations', reservationRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
