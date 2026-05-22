@@ -46,9 +46,14 @@ function App() {
           <Route path="/reset-password"  element={<ResetPassword />} />
           <Route path="/catalogo/:slug" element={<Catalogo />} />
           <Route path="/reservar/:slug" element={<Reservar />} />
-          <Route path="/mis-reservas" element={<MisReservas />} />
-          <Route path="/empleado/agenda" element={<Agenda />} />
+           <Route path="/catalogo/:slug/*" element={<Catalogo />} />
+           <Route path="/reservar/:slug/*" element={<Reservar />} />
+          <Route path="/mis-reservas" element={<PrivateRoute roles={['CLIENTE']}><MisReservas /></PrivateRoute>} />
+          <Route path="/empleado/agenda" element={<PrivateRoute roles={['EMPLEADO']}><Agenda /></PrivateRoute>} />
           <Route path="/perfil" element={<PrivateRoute><Profile /></PrivateRoute>} />
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/index" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/*" element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="/admin/dashboard" element={<PrivateRoute roles={['SUPER_ADMIN', 'ADMIN_NEGOCIO']}><Dashboard /></PrivateRoute>} />
           <Route path="/admin/negocios" element={<PrivateRoute roles={['SUPER_ADMIN']}><Dashboard /></PrivateRoute>} />
           <Route path="/admin/horarios" element={<PrivateRoute roles={['ADMIN_NEGOCIO', 'SUPER_ADMIN']}><Horarios /></PrivateRoute>} />
@@ -61,6 +66,7 @@ function App() {
             path="/reservas/:slug"
             element={<BusinessPortal />}
           />
+          <Route path="/reservas/:slug/*" element={<BusinessPortal />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

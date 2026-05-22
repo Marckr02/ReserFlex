@@ -37,6 +37,20 @@ export default function Profile() {
     }
   };
 
+  const handleBack = () => {
+    if (user?.role === 'EMPLEADO') {
+      navigate('/empleado/agenda');
+      return;
+    }
+
+    if (user?.role === 'CLIENTE') {
+      navigate('/mis-reservas');
+      return;
+    }
+
+    navigate('/admin/dashboard');
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-10">
       <div className="mx-auto max-w-lg rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
@@ -92,7 +106,7 @@ export default function Profile() {
             </button>
             <button
               type="button"
-              onClick={() => navigate('/admin/dashboard')}
+              onClick={handleBack}
               className="rounded-xl bg-slate-200 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-300"
             >
               Volver
