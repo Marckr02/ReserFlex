@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const links = [
@@ -13,6 +13,7 @@ const links = [
 export default function AdminNav() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   return (
     <nav className="mb-6 border-b border-gray-200 bg-white shadow-sm">
@@ -23,11 +24,17 @@ export default function AdminNav() {
             <Link
               key={link.to}
               to={link.to}
-              className="rounded-lg px-3 py-1.5 text-sm text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
+              className={`rounded-lg px-3 py-1.5 text-sm transition ${pathname === link.to ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}
             >
               {link.label}
             </Link>
           ))}
+          <Link
+            to="/perfil"
+            className={`rounded-lg px-3 py-1.5 text-sm transition ${pathname === '/perfil' ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}
+          >
+            Perfil
+          </Link>
         </div>
         <div className="ml-4 flex items-center gap-3 whitespace-nowrap">
           <span className="text-sm text-gray-500">{user?.name}</span>

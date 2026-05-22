@@ -74,6 +74,16 @@ export default function Dashboard() {
     navigate('/login')
   }
 
+  const handleToggle = async (id) => {
+    try {
+      await api.patch(`/business/${id}/toggle`)
+      setSuccess('Estado del negocio actualizado')
+      fetchBusinesses()
+    } catch {
+      setError('Error al cambiar estado del negocio')
+    }
+  }
+
   if (user?.role === 'SUPER_ADMIN') {
     return (
       <div className="min-h-screen bg-gray-100">
@@ -83,6 +93,12 @@ export default function Dashboard() {
               <h1 className="text-xl font-bold text-blue-700">ReserFlex - Admin</h1>
               <div className="flex items-center gap-4">
                 <span className="text-gray-600">{user.name}</span>
+                <button
+                  onClick={() => navigate('/perfil')}
+                  className="text-gray-600 hover:text-gray-800"
+                >
+                  Perfil
+                </button>
                 <button
                   onClick={handleLogout}
                   className="text-gray-600 hover:text-gray-800"
@@ -118,7 +134,15 @@ export default function Dashboard() {
                   key={biz.id}
                   className="bg-white rounded-lg shadow p-6 hover:shadow-md transition"
                 >
-                  <h3 className="font-bold text-lg text-gray-800">{biz.name}</h3>
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="font-bold text-lg text-gray-800">{biz.name}</h3>
+                    <button
+                      onClick={() => handleToggle(biz.id)}
+                      className={`text-xs px-2 py-1 rounded-full font-medium ${biz.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
+                    >
+                      {biz.active ? 'Activo' : 'Inactivo'}
+                    </button>
+                  </div>
                   <p className="text-gray-500 text-sm">
                     {BUSINESS_TYPES[biz.type] || biz.type}
                   </p>
@@ -235,6 +259,12 @@ export default function Dashboard() {
               <h1 className="text-xl font-bold text-blue-700">ReserFlex - Mi Negocio</h1>
               <div className="flex items-center gap-4">
                 <span className="text-gray-600">{user.name}</span>
+                <button
+                  onClick={() => navigate('/perfil')}
+                  className="text-gray-600 hover:text-gray-800"
+                >
+                  Perfil
+                </button>
                 <button
                   onClick={handleLogout}
                   className="text-gray-600 hover:text-gray-800"

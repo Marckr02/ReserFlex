@@ -17,6 +17,12 @@ export default function MisReservas() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [showReschedule, setShowReschedule] = useState(false);
+  const [selectedReservation, setSelectedReservation] = useState(null);
+  const [rescheduleDate, setRescheduleDate] = useState('');
+  const [rescheduleSlots, setRescheduleSlots] = useState([]);
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [rescheduling, setRescheduling] = useState(false);
 
   const loadReservations = async () => {
     try {
@@ -47,6 +53,61 @@ export default function MisReservas() {
       await loadReservations();
     } catch (err) {
       setError(err.response?.data?.message || 'No se pudo cancelar la reserva');
+    }
+  };
+
+  const openRescheduleModal = (reservation) => {
+    const initialDate = new Date(reservation.startTime).toISOString().split('T')[0];
+    setSelectedReservation(reservation);
+    setRescheduleDate(initialDate);
+    setSelectedSlot(null);
+    setRescheduleSlots([]);
+    setShowReschedule(true);
+  };
+
+  useEffect(() => {
+    const loadSlots = async () => {
+      if (!showReschedule || !selectedReservation || !rescheduleDate) return;
+      try {
+        const { data } = await api.get('/reservations/slots', {
+          params: {
+            businessId: selectedReservation.business.id,
+            serviceId: selectedReservation.service.id,
+            employeeId: selectedReservation.employee?.id || undefined,
+            date: rescheduleDate
+          }
+        });
+        setRescheduleSlots(data.slots || []);
+      } catch (err) {
+        setError(err.response?.data?.message || 'No se pudieron cargar los slots de reprogramación');
+      }
+    };
+
+    loadSlots();
+  }, [showReschedule, selectedReservation, rescheduleDate]);
+
+  const handleReschedule = async (e) => {
+    e.preventDefault();
+    if (!selectedReservation || !selectedSlot) {
+      setError('Selecciona un horario para reprogramar');
+      return;
+    }
+
+    setRescheduling(true);
+    setError('');
+    setMessage('');
+    try {
+      await api.patch(`/reservations/${selectedReservation.id}/reschedule`, {
+        startTime: `${rescheduleDate}T${selectedSlot.startTime}:00`
+      });
+      setMessage('Reserva reprogramada correctamente');
+      setShowReschedule(false);
+      setSelectedReservation(null);
+      await loadReservations();
+    } catch (err) {
+      setError(err.response?.data?.message || 'No se pudo reprogramar la reserva');
+    } finally {
+      setRescheduling(false);
     }
   };
 
@@ -125,12 +186,20 @@ export default function MisReservas() {
 
                   <div className="flex flex-col gap-2 md:items-end">
                     {reservation.status !== 'CANCELADA' && (
-                      <button
-                        onClick={() => handleCancel(reservation.id)}
-                        className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
-                      >
-                        Cancelar
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => openRescheduleModal(reservation)}
+                          className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                        >
+                          Reprogramar
+                        </button>
+                        <button
+                          onClick={() => handleCancel(reservation.id)}
+                          className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
                     )}
                     {reservation.employee?.name && (
                       <p className="text-sm text-slate-500">Empleado: {reservation.employee.name}</p>
@@ -142,6 +211,66 @@ export default function MisReservas() {
           )}
         </div>
       </div>
+
+      {showReschedule && selectedReservation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="text-xl font-bold text-slate-900">Reprogramar reserva</h2>
+            <p className="mt-1 text-sm text-slate-600">{selectedReservation.service?.name} - {selectedReservation.business?.name}</p>
+
+            <form onSubmit={handleReschedule} className="mt-4 space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">Nueva fecha</label>
+                <input
+                  type="date"
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2"
+                  value={rescheduleDate}
+                  onChange={(e) => {
+                    setRescheduleDate(e.target.value);
+                    setSelectedSlot(null);
+                  }}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">Horarios disponibles</label>
+                <div className="grid grid-cols-3 gap-2 md:grid-cols-5">
+                  {rescheduleSlots.map((slot) => (
+                    <button
+                      key={`${slot.startTime}-${slot.endTime}`}
+                      type="button"
+                      disabled={!slot.available}
+                      onClick={() => slot.available && setSelectedSlot(slot)}
+                      className={`rounded-lg border px-2 py-2 text-xs font-medium ${!slot.available ? 'bg-gray-100 text-gray-400' : selectedSlot?.startTime === slot.startTime ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'}`}
+                    >
+                      {slot.startTime}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={rescheduling}
+                  className="flex-1 rounded-xl bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {rescheduling ? 'Guardando...' : 'Confirmar reprogramación'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowReschedule(false)}
+                  className="flex-1 rounded-xl bg-slate-200 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-300"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

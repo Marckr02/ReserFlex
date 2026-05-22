@@ -165,4 +165,37 @@ const resetPassword = async (req, res) => {
   }
 };
 
-module.exports = { register, verifyEmail, login, forgotPassword, resetPassword }; 
+// PATCH /api/auth/change-password
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Contraseña actual y nueva contraseña son requeridas' });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: 'La nueva contraseña debe tener al menos 8 caracteres' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+    const validCurrent = await bcrypt.compare(currentPassword, user.password);
+    if (!validCurrent) {
+      return res.status(400).json({ message: 'La contraseña actual es incorrecta' });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashed }
+    });
+
+    res.json({ message: 'Contraseña actualizada correctamente' });
+  } catch (err) {
+    console.error('Error en changePassword:', err);
+    res.status(500).json({ message: 'Error en el servidor' });
+  }
+};
+
+module.exports = { register, verifyEmail, login, forgotPassword, resetPassword, changePassword }; 

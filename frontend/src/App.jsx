@@ -17,6 +17,7 @@ import Reservar from './pages/cliente/Reservar'
 import MisReservas from './pages/cliente/MisReservas'
 import Agenda from './pages/empleado/Agenda'
 import NotFound from './pages/NotFound'
+import Profile from './pages/Profile'
 
 const PrivateRoute = ({ children, roles }) => {
   const token = localStorage.getItem('token')
@@ -47,6 +48,7 @@ function App() {
           <Route path="/reservar/:slug" element={<Reservar />} />
           <Route path="/mis-reservas" element={<MisReservas />} />
           <Route path="/empleado/agenda" element={<Agenda />} />
+          <Route path="/perfil" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/admin/dashboard" element={<PrivateRoute roles={['SUPER_ADMIN', 'ADMIN_NEGOCIO']}><Dashboard /></PrivateRoute>} />
           <Route path="/admin/negocios" element={<PrivateRoute roles={['SUPER_ADMIN']}><Dashboard /></PrivateRoute>} />
           <Route path="/admin/horarios" element={<PrivateRoute roles={['ADMIN_NEGOCIO', 'SUPER_ADMIN']}><Horarios /></PrivateRoute>} />
