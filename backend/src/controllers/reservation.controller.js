@@ -239,7 +239,10 @@ const getMyReservations = async (req, res) => {
     const { status, businessId } = req.query;
     const reservations = await prisma.reservation.findMany({
       where: {
-        clientId: req.user.id,
+        OR: [
+          { clientId: req.user.id },
+          ...(req.user.email ? [{ guestEmail: req.user.email }] : [])
+        ],
         ...(status && { status }),
         ...(businessId && { businessId })
       },
