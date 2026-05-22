@@ -12,9 +12,11 @@ export default function Reservar() {
   const [serviceId, setServiceId] = useState(params.get('serviceId') || '');
   const [date, setDate] = useState('');
   const [slots, setSlots] = useState([]);
+  const [selectedSlot, setSelectedSlot] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [confirmedReservation, setConfirmedReservation] = useState(null);
   const [form, setForm] = useState({ name: '', email: '', phone: '', notes: '', employeeId: '', guest: false });
 
   useEffect(() => {
@@ -50,6 +52,7 @@ export default function Reservar() {
           params: { businessId: business.id, serviceId, employeeId: form.employeeId || undefined, date }
         });
         setSlots(data.slots || []);
+        setSelectedSlot(null);
       } catch (err) {
         setError(err.response?.data?.message || 'No se pudieron cargar los horarios');
       }
@@ -62,10 +65,10 @@ export default function Reservar() {
     e.preventDefault();
     setError('');
     setMessage('');
+    setConfirmedReservation(null);
 
-    const selectedSlot = slots.find((slot) => slot.available);
     if (!selectedSlot) {
-      setError('Selecciona una fecha con disponibilidad');
+      setError('Selecciona un horario');
       return;
     }
 
@@ -82,6 +85,7 @@ export default function Reservar() {
       if (user?.token) {
         await api.post('/reservations', payload);
         setMessage('Reserva creada correctamente');
+        setConfirmedReservation({ serviceName: selectedService?.name, startTime, guest: false });
       } else {
         await api.post('/reservations/guest', {
           ...payload,
@@ -90,6 +94,7 @@ export default function Reservar() {
           guestPhone: form.phone
         });
         setMessage('Reserva creada. Revisa tu correo para el código de acceso');
+        setConfirmedReservation({ serviceName: selectedService?.name, startTime, guest: true });
       }
     } catch (err) {
       setError(err.response?.data?.message || 'No se pudo crear la reserva');
@@ -147,14 +152,20 @@ export default function Reservar() {
                   <button
                     type="button"
                     key={`${slot.startTime}-${slot.endTime}`}
-                    className={`rounded-xl border px-4 py-3 text-sm font-medium ${slot.available ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-slate-100 text-slate-400 line-through'}`}
+                    onClick={() => slot.available && setSelectedSlot(slot)}
                     disabled={!slot.available}
+                    className={`rounded-xl border px-4 py-3 text-sm font-medium transition ${slot.available ? (selectedSlot?.startTime === slot.startTime ? 'border-blue-600 bg-blue-600 text-white' : 'border-emerald-300 bg-emerald-50 text-emerald-700 hover:border-blue-400') : 'border-slate-200 bg-slate-100 text-slate-400 line-through cursor-not-allowed'}`}
                   >
                     {slot.startTime}
                   </button>
                 ))}
               </div>
               {slots.length === 0 && <p className="mt-2 text-sm text-slate-500">Selecciona fecha para ver disponibilidad.</p>}
+              {selectedSlot && (
+                <p className="mt-3 rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-700">
+                  Horario seleccionado: {selectedSlot.startTime} - {selectedSlot.endTime}
+                </p>
+              )}
             </div>
           </div>
 
@@ -174,6 +185,18 @@ export default function Reservar() {
             </div>
 
             {message && <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</p>}
+            {confirmedReservation && (
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
+                <p className="font-semibold">Reserva confirmada</p>
+                <p className="mt-1 text-sm">
+                  {confirmedReservation.serviceName} · {new Date(confirmedReservation.startTime).toLocaleString('es-EC', {
+                    dateStyle: 'medium',
+                    timeStyle: 'short'
+                  })}
+                </p>
+                <p className="text-xs mt-2 text-emerald-700">{confirmedReservation.guest ? 'Se envió un correo con el código de acceso.' : 'La reserva ya quedó registrada en tu cuenta.'}</p>
+              </div>
+            )}
             {error && <p className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p>}
 
             <button type="submit" className="w-full rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white hover:bg-slate-700">

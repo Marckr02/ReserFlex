@@ -262,10 +262,21 @@ export default function Dashboard() {
             </Link>
           </div>
 
+          <div className="grid gap-4 md:grid-cols-2 mb-6">
+            <Link to="/admin/reservas" className="bg-white rounded-lg shadow p-5 hover:shadow-md transition">
+              <h3 className="font-bold text-gray-800">Reservas</h3>
+              <p className="text-sm text-gray-500 mt-1">Gestiona estados, clientes y agenda diaria.</p>
+            </Link>
+            <Link to="/admin/metricas" className="bg-white rounded-lg shadow p-5 hover:shadow-md transition">
+              <h3 className="font-bold text-gray-800">Métricas</h3>
+              <p className="text-sm text-gray-500 mt-1">Revisa el rendimiento del negocio.</p>
+            </Link>
+          </div>
+
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Panel de Administración</h2>
             <p className="text-gray-600">Gestiona las reservas de tu negocio.</p>
-            <p className="text-gray-400 text-sm mt-4">(Sprint 2 - Coming Soon)</p>
+            <p className="text-gray-400 text-sm mt-4">Sprint 2 listo</p>
           </div>
         </main>
       </div>

@@ -10,10 +10,13 @@ import BusinessPortal from './pages/BusinessPortal'
 import Horarios from './pages/admin/Horarios'
 import Servicios from './pages/admin/Servicios'
 import Empleados from './pages/admin/Empleados'
+import ReservasAdmin from './pages/admin/ReservasAdmin'
+import Metricas from './pages/admin/Metricas'
 import Catalogo from './pages/cliente/Catalogo'
 import Reservar from './pages/cliente/Reservar'
 import MisReservas from './pages/cliente/MisReservas'
 import Agenda from './pages/empleado/Agenda'
+import NotFound from './pages/NotFound'
 
 const PrivateRoute = ({ children, roles }) => {
   const token = localStorage.getItem('token')
@@ -44,22 +47,19 @@ function App() {
           <Route path="/reservar/:slug" element={<Reservar />} />
           <Route path="/mis-reservas" element={<MisReservas />} />
           <Route path="/empleado/agenda" element={<Agenda />} />
-          <Route
-            path="/admin/*"
-            element={
-              <PrivateRoute roles={['SUPER_ADMIN', 'ADMIN_NEGOCIO']}>
-                <Dashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route path="/admin/horarios" element={<PrivateRoute roles={['SUPER_ADMIN', 'ADMIN_NEGOCIO']}><Horarios /></PrivateRoute>} />
-          <Route path="/admin/servicios" element={<PrivateRoute roles={['SUPER_ADMIN', 'ADMIN_NEGOCIO']}><Servicios /></PrivateRoute>} />
-          <Route path="/admin/empleados" element={<PrivateRoute roles={['SUPER_ADMIN', 'ADMIN_NEGOCIO']}><Empleados /></PrivateRoute>} />
+          <Route path="/admin/dashboard" element={<PrivateRoute roles={['SUPER_ADMIN', 'ADMIN_NEGOCIO']}><Dashboard /></PrivateRoute>} />
+          <Route path="/admin/negocios" element={<PrivateRoute roles={['SUPER_ADMIN']}><Dashboard /></PrivateRoute>} />
+          <Route path="/admin/horarios" element={<PrivateRoute roles={['ADMIN_NEGOCIO', 'SUPER_ADMIN']}><Horarios /></PrivateRoute>} />
+          <Route path="/admin/servicios" element={<PrivateRoute roles={['ADMIN_NEGOCIO', 'SUPER_ADMIN']}><Servicios /></PrivateRoute>} />
+          <Route path="/admin/empleados" element={<PrivateRoute roles={['ADMIN_NEGOCIO', 'SUPER_ADMIN']}><Empleados /></PrivateRoute>} />
+          <Route path="/admin/reservas" element={<PrivateRoute roles={['ADMIN_NEGOCIO', 'SUPER_ADMIN']}><ReservasAdmin /></PrivateRoute>} />
+          <Route path="/admin/metricas" element={<PrivateRoute roles={['ADMIN_NEGOCIO', 'SUPER_ADMIN']}><Metricas /></PrivateRoute>} />
           <Route path="/" element={<Navigate to="/login" />} />
           <Route
             path="/reservas/:slug"
             element={<BusinessPortal />}
           />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
