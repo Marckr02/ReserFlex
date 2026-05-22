@@ -5,6 +5,18 @@ import autoprefixer from 'autoprefixer'
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+          if (id.includes('recharts')) return 'charts';
+          if (id.includes('react-router-dom')) return 'router';
+          return 'vendor';
+        }
+      }
+    }
+  },
   css: {
     postcss: {
       plugins: [

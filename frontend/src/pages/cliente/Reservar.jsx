@@ -18,6 +18,7 @@ export default function Reservar() {
   const [error, setError] = useState('');
   const [confirmedReservation, setConfirmedReservation] = useState(null);
   const [form, setForm] = useState({ name: '', email: '', phone: '', notes: '', employeeId: '', guest: false });
+  const minDate = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
     const load = async () => {
@@ -132,7 +133,7 @@ export default function Reservar() {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">Fecha</label>
-                <input type="date" className="w-full rounded-xl border border-slate-300 px-3 py-2" value={date} onChange={(e) => setDate(e.target.value)} required />
+                <input type="date" min={minDate} className="w-full rounded-xl border border-slate-300 px-3 py-2" value={date} onChange={(e) => setDate(e.target.value)} required />
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">Empleado (opcional)</label>

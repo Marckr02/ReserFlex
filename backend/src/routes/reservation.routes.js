@@ -3,8 +3,10 @@ const { authenticate, authorize } = require('../middlewares/auth.middleware');
 const ctrl = require('../controllers/reservation.controller');
 
 router.get('/slots',                            ctrl.getSlots);                    // público
+router.get('/clients/search', authenticate, authorize('ADMIN_NEGOCIO','SUPER_ADMIN'), ctrl.searchClients); // helper admin
 router.post('/',        authenticate,           ctrl.createReservation);           // HU7
 router.post('/guest',                           ctrl.createGuestReservation);      // HU8
+router.post('/business/:businessId/manual', authenticate, authorize('ADMIN_NEGOCIO','SUPER_ADMIN'), ctrl.createAdminReservation); // HU12 admin
 router.get('/my',       authenticate,           ctrl.getMyReservations);           // HU10
 router.get('/employee', authenticate, authorize('EMPLEADO'), ctrl.getEmployeeReservations); // HU11
 router.get('/business/:businessId', authenticate, authorize('ADMIN_NEGOCIO','SUPER_ADMIN'), ctrl.getBusinessReservations); // HU12

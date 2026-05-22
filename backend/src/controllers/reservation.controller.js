@@ -127,6 +127,112 @@ const createGuestReservation = async (req, res) => {
   }
 };
 
+// POST /api/reservations/business/:businessId/manual — HU12 admin
+const createAdminReservation = async (req, res) => {
+  try {
+    const { businessId } = req.params;
+    const { serviceId, employeeId, startTime, notes, clientId, guestName, guestEmail, guestPhone } = req.body;
+
+    if (req.user.role === 'ADMIN_NEGOCIO' && req.user.businessId !== businessId) {
+      return res.status(403).json({ message: 'No puedes crear reservas para otro negocio' });
+    }
+
+    if (!serviceId || !startTime) {
+      return res.status(400).json({ message: 'Servicio y horario son requeridos' });
+    }
+
+    if (!clientId && (!guestName || !guestEmail || !guestPhone)) {
+      return res.status(400).json({ message: 'Debes seleccionar cliente o completar datos de invitado' });
+    }
+
+    const service = await prisma.service.findUnique({ where: { id: serviceId } });
+    if (!service) return res.status(404).json({ message: 'Servicio no encontrado' });
+
+    const start = new Date(startTime);
+    const end = new Date(start.getTime() + service.duration * 60000);
+
+    const conflict = await prisma.reservation.findFirst({
+      where: {
+        businessId,
+        employeeId: employeeId || undefined,
+        status: { not: 'CANCELADA' },
+        startTime: { lt: end },
+        endTime: { gt: start }
+      }
+    });
+    if (conflict) return res.status(409).json({ message: 'El horario ya no está disponible' });
+
+    let accessCode = null;
+    if (!clientId) {
+      accessCode = crypto.randomInt(100000, 999999).toString();
+    }
+
+    const reservation = await prisma.reservation.create({
+      data: {
+        businessId,
+        serviceId,
+        clientId: clientId || null,
+        employeeId: employeeId || null,
+        startTime: start,
+        endTime: end,
+        notes: notes || null,
+        guestName: clientId ? null : guestName,
+        guestEmail: clientId ? null : guestEmail,
+        guestPhone: clientId ? null : guestPhone,
+        accessCode,
+        status: 'PENDIENTE'
+      },
+      include: {
+        service: true,
+        business: true,
+        employee: true,
+        client: true
+      }
+    });
+
+    if (clientId && reservation.client?.email) {
+      await sendConfirmationEmail(reservation.client.email, reservation);
+    } else if (!clientId && guestEmail) {
+      await sendConfirmationEmail(guestEmail, reservation, accessCode);
+    }
+
+    res.status(201).json({ reservation, accessCode });
+  } catch (err) {
+    console.error('Error createAdminReservation:', err);
+    res.status(500).json({ message: 'Error al crear reserva manual' });
+  }
+};
+
+// GET /api/reservations/clients/search?q=... — HU12 helper
+const searchClients = async (req, res) => {
+  try {
+    const { q } = req.query;
+    const term = (q || '').trim();
+
+    if (term.length < 2) {
+      return res.json([]);
+    }
+
+    const users = await prisma.user.findMany({
+      where: {
+        role: 'CLIENTE',
+        OR: [
+          { name: { contains: term, mode: 'insensitive' } },
+          { email: { contains: term, mode: 'insensitive' } }
+        ]
+      },
+      select: { id: true, name: true, email: true },
+      orderBy: { createdAt: 'desc' },
+      take: 10
+    });
+
+    res.json(users);
+  } catch (err) {
+    console.error('Error searchClients:', err);
+    res.status(500).json({ message: 'Error al buscar clientes' });
+  }
+};
+
 // GET /api/reservations/my — HU10 historial cliente
 const getMyReservations = async (req, res) => {
   try {
@@ -299,6 +405,8 @@ const getMetrics = async (req, res) => {
 
 module.exports = {
   getSlots, createReservation, createGuestReservation,
+  createAdminReservation,
+  searchClients,
   getMyReservations, getEmployeeReservations, getBusinessReservations,
   cancelReservation, rescheduleReservation, updateReservationStatus, getMetrics
 };

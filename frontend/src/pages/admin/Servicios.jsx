@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import AdminNav from '../../components/AdminNav';
 
 export default function Servicios() {
   const { user } = useAuth();
@@ -112,6 +113,7 @@ export default function Servicios() {
 
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-8">
+      <AdminNav />
       <div className="mx-auto max-w-6xl">
         <div className="mb-8 rounded-3xl bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 p-8 text-white shadow-xl">
           <p className="text-sm uppercase tracking-[0.3em] text-blue-200">Sprint 2</p>
