@@ -58,9 +58,9 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4 sm:px-0">
       {showSuccess ? (
-        <div className="bg-white p-8 rounded-2xl shadow-md w-full max-w-md text-center">
+        <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-md w-full max-w-md text-center">
           <div className="text-green-500 text-6xl mb-4">✓</div>
           <h1 className="text-2xl font-bold text-gray-800 mb-2">¡Registro exitoso!</h1>
           <p className="text-gray-600 mb-2">
@@ -78,7 +78,7 @@ export default function Register() {
           </Link>
         </div>
       ) : (
-        <div className="bg-white p-8 rounded-2xl shadow-md w-full max-w-md">
+        <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-md w-full max-w-md">
           <h1 className="text-2xl font-bold text-center mb-6 text-blue-700">
             Crear cuenta
           </h1>
@@ -90,7 +90,7 @@ export default function Register() {
               </label>
               <input
                 type="text"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 required
@@ -103,7 +103,7 @@ export default function Register() {
               </label>
               <input
                 type="email"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 required
@@ -116,7 +116,7 @@ export default function Register() {
               </label>
               <input
                 type="password"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={form.password}
                 onChange={handlePasswordChange}
                 required

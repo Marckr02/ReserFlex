@@ -25,6 +25,8 @@ export default function Dashboard() {
     adminName: '',
     adminEmail: ''
   })
+  const [slugPreview, setSlugPreview] = useState('')
+  const [slugAvailable, setSlugAvailable] = useState(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
@@ -63,9 +65,38 @@ export default function Dashboard() {
         adminName: '',
         adminEmail: ''
       })
+      setSlugPreview('')
+      setSlugAvailable(null)
       fetchBusinesses()
     } catch (err) {
       setError(err.response?.data?.message || 'Error al crear el negocio')
+    }
+  }
+
+  const normalizeSlug = (value) => value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim()
+
+  const handleNameBlur = async (e) => {
+    const name = e.target.value.trim()
+    if (!name) {
+      setSlugPreview('')
+      setSlugAvailable(null)
+      return
+    }
+
+    const slug = normalizeSlug(name)
+    setSlugPreview(slug)
+    try {
+      const { data } = await api.get(`/business/check-slug?name=${encodeURIComponent(name)}`)
+      setSlugAvailable(data.available)
+    } catch {
+      setSlugAvailable(null)
     }
   }
 
@@ -155,6 +186,14 @@ export default function Dashboard() {
                   >
                     Ver portal →
                   </a>
+                  {biz.type === 'RESTAURANTE' && (
+                    <Link
+                      to={`/admin/plano/${biz.id}`}
+                      className="text-sm font-medium text-emerald-600 hover:underline mt-2 block"
+                    >
+                      Administrar plano de mesas
+                    </Link>
+                  )}
                 </div>
               ))}
             </div>
@@ -171,11 +210,19 @@ export default function Dashboard() {
                   <label className="block text-sm font-medium mb-1">Nombre</label>
                   <input
                     type="text"
-                    className="w-full border rounded-lg px-3 py-2"
+                    className="w-full border rounded-lg px-3 py-2 text-base sm:text-sm"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    onBlur={handleNameBlur}
                     required
                   />
+                  {slugPreview && (
+                    <div className={`mt-2 text-xs flex items-center gap-2 ${slugAvailable === true ? 'text-emerald-600' : slugAvailable === false ? 'text-red-500' : 'text-gray-500'}`}>
+                      <span>Tu URL: /reservas/{slugPreview}</span>
+                      {slugAvailable === true && <span>✓ Disponible</span>}
+                      {slugAvailable === false && <span>✕ Ya está en uso</span>}
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -217,7 +264,7 @@ export default function Dashboard() {
                   <label className="block text-sm font-medium mb-1">Email del Admin</label>
                   <input
                     type="email"
-                    className="w-full border rounded-lg px-3 py-2"
+                    className="w-full border rounded-lg px-3 py-2 text-base sm:text-sm"
                     value={form.adminEmail}
                     onChange={(e) => setForm({ ...form, adminEmail: e.target.value })}
                     required

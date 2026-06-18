@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import api from '../../services/api';
 
@@ -8,6 +8,9 @@ export default function Catalogo() {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [priceRange, setPriceRange] = useState('all');
+  const [durationFilter, setDurationFilter] = useState('all');
 
   useEffect(() => {
     const load = async () => {
@@ -25,6 +28,37 @@ export default function Catalogo() {
 
     load();
   }, [slug]);
+
+  const filteredServices = useMemo(() => {
+    return services.filter((service) => {
+      const haystack = `${service.name} ${service.description || ''}`.toLowerCase();
+      const searchMatch = !search || haystack.includes(search.toLowerCase());
+
+      const priceMatch = priceRange === 'all'
+        ? true
+        : priceRange === '0-20'
+          ? service.price <= 20
+          : priceRange === '20-50'
+            ? service.price > 20 && service.price <= 50
+            : service.price > 50;
+
+      const durationMatch = durationFilter === 'all'
+        ? true
+        : durationFilter === 'short'
+          ? service.duration <= 30
+          : durationFilter === 'medium'
+            ? service.duration > 30 && service.duration <= 60
+            : service.duration > 60;
+
+      return searchMatch && priceMatch && durationMatch;
+    });
+  }, [services, search, priceRange, durationFilter]);
+
+  const clearFilters = () => {
+    setSearch('');
+    setPriceRange('all');
+    setDurationFilter('all');
+  };
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
@@ -52,13 +86,48 @@ export default function Catalogo() {
       </div>
 
       <div className="mx-auto max-w-6xl px-4 py-10">
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {services.length === 0 ? (
-            <div className="rounded-3xl bg-white p-8 text-center text-slate-500 shadow-sm border border-slate-200 md:col-span-2 xl:col-span-3">
-              Todavía no hay servicios disponibles.
-            </div>
-          ) : (
-            services.map((service) => (
+        <div className="rounded-3xl bg-white p-4 shadow-sm border border-slate-200">
+          <input
+            type="text"
+            placeholder="Buscar servicio o descripción"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-xl border border-slate-300 px-3 py-3 text-base sm:text-sm"
+          />
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            <select value={priceRange} onChange={(e) => setPriceRange(e.target.value)} className="rounded-xl border border-slate-300 px-3 py-2 text-sm">
+              <option value="all">Cualquier precio</option>
+              <option value="0-20">Hasta $20</option>
+              <option value="20-50">$20 - $50</option>
+              <option value="50+">Más de $50</option>
+            </select>
+
+            <select value={durationFilter} onChange={(e) => setDurationFilter(e.target.value)} className="rounded-xl border border-slate-300 px-3 py-2 text-sm">
+              <option value="all">Cualquier duración</option>
+              <option value="short">Menos de 30 min</option>
+              <option value="medium">30 - 60 min</option>
+              <option value="long">Más de 60 min</option>
+            </select>
+
+            {(search || priceRange !== 'all' || durationFilter !== 'all') && (
+              <button onClick={clearFilters} className="rounded-xl px-3 py-2 text-sm text-blue-600 hover:bg-blue-50">
+                Limpiar filtros
+              </button>
+            )}
+          </div>
+        </div>
+
+        {filteredServices.length === 0 ? (
+          <div className="mt-5 rounded-3xl bg-white p-8 text-center text-slate-500 shadow-sm border border-slate-200">
+            <p>No se encontraron servicios con estos filtros</p>
+            <button onClick={clearFilters} className="mt-3 text-sm font-medium text-blue-600 hover:underline">
+              Ver todos los servicios
+            </button>
+          </div>
+        ) : (
+          <div className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {filteredServices.map((service) => (
               <div key={service.id} className="rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -85,9 +154,9 @@ export default function Catalogo() {
                   Reservar ahora
                 </Link>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -134,4 +134,32 @@ const sendConfirmationEmail = async (to, reservation, accessCode = null) => {
   }
 };
 
-module.exports = { sendVerificationEmail, sendCredentialsEmail, sendResetEmail, sendConfirmationEmail };
+const sendTableConfirmationEmail = async (to, reservation, accessCode = null) => {
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+      <h2 style="color:#2563eb">¡Reserva de mesa confirmada!</h2>
+      <div style="background:#f3f4f6;padding:16px;border-radius:8px;margin:16px 0">
+        <p><strong>Negocio:</strong> ${reservation.business?.name || ''}</p>
+        <p><strong>Mesa:</strong> ${reservation.table?.number ? `Mesa ${reservation.table.number}` : ''}</p>
+        <p><strong>Fecha:</strong> ${reservation.date || ''}</p>
+        <p><strong>Hora:</strong> ${reservation.time || ''}</p>
+        <p><strong>Personas:</strong> ${reservation.guests || ''}</p>
+        ${reservation.occasion ? `<p><strong>Ocasión:</strong> ${reservation.occasion}</p>` : ''}
+        ${accessCode ? `<p><strong>Código de acceso:</strong> ${accessCode}</p>` : ''}
+      </div>
+      <a href="${process.env.FRONTEND_URL}/mis-reservas"
+        style="display:inline-block;background:#2563eb;color:white;padding:12px 24px;
+        text-decoration:none;border-radius:6px">Ver mis reservas</a>
+    </div>
+  `;
+
+  try {
+    await sendEmail(to, '¡Tu reserva de mesa está confirmada! — ReserFlex', html);
+    console.log(`📧 Confirmación de mesa enviada a ${to}`);
+  } catch (err) {
+    console.error('❌ Error enviando confirmación de mesa:', err.message);
+    throw new Error('No se pudo enviar la confirmación de mesa');
+  }
+};
+
+module.exports = { sendVerificationEmail, sendCredentialsEmail, sendResetEmail, sendConfirmationEmail, sendTableConfirmationEmail };

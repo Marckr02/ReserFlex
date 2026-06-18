@@ -69,6 +69,8 @@ model Business {
   schedules   Schedule[]
   services    Service[]
   reservations Reservation[]
+  tables      RestaurantTable[]
+  photos      BusinessPhoto[]
 }
 
 // ── Modelos nuevos Sprint 2 ───────────────────────────────────────────────────
@@ -133,4 +135,50 @@ model Reservation {
   service      Service  @relation(fields: [serviceId], references: [id])
   client       User?    @relation("ClientReservations", fields: [clientId], references: [id])
   employee     User?    @relation("EmployeeReservations", fields: [employeeId], references: [id])
+}
+
+model RestaurantTable {
+  id         String   @id @default(uuid())
+  businessId String
+  number     Int
+  capacity   Int
+  posX       Float    @default(0)
+  posY       Float    @default(0)
+  shape      String   @default("round")
+  active     Boolean  @default(true)
+
+  business          Business           @relation(fields: [businessId], references: [id])
+  tableReservations TableReservation[]
+
+  @@unique([businessId, number])
+}
+
+model TableReservation {
+  id         String            @id @default(uuid())
+  tableId    String
+  businessId String
+  date       String
+  time       String
+  guests     Int
+  occasion   String?
+  status     ReservationStatus @default(PENDIENTE)
+  clientId   String?
+  guestName  String?
+  guestEmail String?
+  guestPhone String?
+  accessCode String?
+  createdAt  DateTime          @default(now())
+
+  table      RestaurantTable @relation(fields: [tableId], references: [id])
+}
+
+model BusinessPhoto {
+  id         String   @id @default(uuid())
+  businessId String
+  url        String
+  caption    String?
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  business   Business @relation(fields: [businessId], references: [id])
 }

@@ -34,8 +34,8 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-2xl shadow-md w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4 sm:px-0">
+      <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-md w-full max-w-md">
         <h1 className="text-3xl font-bold text-center mb-2 text-blue-700">ReserFlex</h1>
         <p className="text-center text-gray-500 mb-6">Sistema de Reservas</p>
 
@@ -46,7 +46,7 @@ export default function Login() {
             </label>
             <input
               type="email"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               required
@@ -59,7 +59,7 @@ export default function Login() {
             </label>
             <input
               type="password"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               required

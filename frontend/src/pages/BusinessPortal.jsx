@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import RestaurantFloorPlan from '../components/RestaurantFloorPlan'
 import api from '../services/api'
 
 const BUSINESS_TYPES = {
@@ -14,6 +15,7 @@ const BUSINESS_TYPES = {
 export default function BusinessPortal() {
   const { slug } = useParams()
   const [business, setBusiness] = useState(null)
+  const [photos, setPhotos] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -22,6 +24,8 @@ export default function BusinessPortal() {
       try {
         const { data } = await api.get(`/business/slug/${slug}`)
         setBusiness(data)
+        const photosRes = await api.get(`/business/${data.id}/photos`)
+        setPhotos(photosRes.data)
       } catch (err) {
         setError(err.response?.data?.message || 'Negocio no encontrado')
       } finally {
@@ -56,9 +60,9 @@ export default function BusinessPortal() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="bg-blue-700 text-white py-12">
-        <div className="max-w-4xl mx-auto px-4 text-center">
+    <div className="min-h-screen bg-slate-50">
+      <div className="bg-gradient-to-r from-blue-950 via-blue-800 to-slate-900 py-12 text-white">
+        <div className="mx-auto max-w-5xl px-4 text-center">
           {business.logoUrl && (
             <img
               src={business.logoUrl}
@@ -71,8 +75,8 @@ export default function BusinessPortal() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 -mt-6">
-        <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="mx-auto max-w-5xl px-4 -mt-6 pb-8">
+        <div className="rounded-3xl bg-white p-6 shadow-lg border border-slate-200">
           <div className="flex items-center gap-2 text-gray-600 mb-6">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -81,12 +85,7 @@ export default function BusinessPortal() {
             <span>{business.address}</span>
           </div>
 
-          <div className="text-center py-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Reservar Cita</h2>
-            <p className="text-gray-600 mb-6">
-              Sistema de reservas en línea. Selecciona el servicio y horario disponibles.
-            </p>
-            <div className="grid gap-3 sm:grid-cols-2 max-w-xl mx-auto">
+          <div className="grid gap-3 sm:grid-cols-2 max-w-2xl mx-auto text-center">
               <Link
                 to={`/catalogo/${slug}`}
                 className="rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white hover:bg-blue-700"
@@ -99,8 +98,31 @@ export default function BusinessPortal() {
               >
                 Reservar ahora
               </Link>
-            </div>
           </div>
+
+          {photos.length > 0 && (
+            <div className="mt-8">
+              <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
+                <h2 className="text-xl font-semibold text-slate-900">Galería</h2>
+                <p className="text-sm text-slate-500">Fotos del local, ambiente y servicio</p>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                {photos.slice(0, 6).map((photo) => (
+                  <img key={photo.id} src={photo.url} alt={photo.caption || business.name} className="h-40 w-full rounded-2xl object-cover" />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {business.type === 'RESTAURANTE' && (
+            <div className="mt-8 rounded-3xl border border-slate-200 bg-slate-50 p-4 sm:p-6">
+              <div className="mb-4">
+                <h2 className="text-xl font-semibold text-slate-900">Mesas disponibles</h2>
+                <p className="text-sm text-slate-500">Selecciona una mesa, fecha y hora para confirmar tu reserva.</p>
+              </div>
+              <RestaurantFloorPlan businessId={business.id} />
+            </div>
+          )}
         </div>
 
         <div className="text-center mt-6 pb-6">
