@@ -107,10 +107,12 @@ const login = async (req, res) => {
 
     res.json({
       token,
+      id: user.id,
       role: user.role,
       name: user.name,
       email: user.email,
-      businessId: user.businessId || null
+      businessId: user.businessId || null,
+      businessType: user.businessId ? (await prisma.business.findUnique({ where: { id: user.businessId }, select: { type: true } }))?.type || null : null
     });
   } catch (error) {
     console.error('Error en login:', error);

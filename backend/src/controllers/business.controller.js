@@ -5,6 +5,15 @@ const { sendCredentialsEmail } = require('../services/mail.service');
 
 const prisma = new PrismaClient();
 
+const normalizeSlug = (value) => value
+  .toLowerCase()
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .replace(/[^a-z0-9\s-]/g, '')
+  .replace(/\s+/g, '-')
+  .replace(/-+/g, '-')
+  .trim();
+
 const createBusiness = async (req, res) => {
   try {
     const { name, type, address, logoUrl, adminEmail, adminName } = req.body;
@@ -13,12 +22,7 @@ const createBusiness = async (req, res) => {
       return res.status(400).json({ message: 'Todos los campos son requeridos' });
     }
 
-    const slug = name
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[̀-ͯ]/g, '')
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-');
+    const slug = normalizeSlug(name);
 
     const existingBusiness = await prisma.business.findUnique({ where: { slug } });
     if (existingBusiness) {
@@ -91,7 +95,7 @@ const getBusinessBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
 
-    const business = await prisma.business.findUnique({
+    const business = await prisma.business.findFirst({
       where: { slug, active: true },
       select: {
         id: true,
@@ -130,4 +134,57 @@ const toggleBusiness = async (req, res) => {
   }
 };
 
-module.exports = { createBusiness, getAllBusinesses, getBusinessBySlug, toggleBusiness };
+const getBusinessPhotos = async (req, res) => {
+  try {
+    const photos = await prisma.businessPhoto.findMany({
+      where: { businessId: req.params.id },
+      orderBy: { order: 'asc' }
+    });
+
+    res.json(photos);
+  } catch (error) {
+    console.error('Error en getBusinessPhotos:', error);
+    res.status(500).json({ message: 'Error al obtener fotos' });
+  }
+};
+
+const uploadBusinessPhotos = async (req, res) => {
+  try {
+    const files = req.files || [];
+    if (files.length === 0) {
+      return res.status(400).json({ message: 'Debes seleccionar al menos una imagen' });
+    }
+
+    const created = await Promise.all(files.map((file, index) => prisma.businessPhoto.create({
+      data: {
+        businessId: req.params.id,
+        url: `/uploads/${file.filename}`,
+        order: index
+      }
+    })));
+
+    res.status(201).json(created);
+  } catch (error) {
+    console.error('Error en uploadBusinessPhotos:', error);
+    res.status(500).json({ message: 'Error al subir fotos' });
+  }
+};
+
+const checkSlug = async (req, res) => {
+  try {
+    const name = String(req.query.name || '').trim();
+    if (!name) {
+      return res.status(400).json({ message: 'El nombre es requerido' });
+    }
+
+    const slug = normalizeSlug(name);
+    const existingBusiness = await prisma.business.findUnique({ where: { slug } });
+
+    res.json({ slug, available: !existingBusiness });
+  } catch (error) {
+    console.error('Error en checkSlug:', error);
+    res.status(500).json({ message: 'Error al verificar slug' });
+  }
+};
+
+module.exports = { createBusiness, getAllBusinesses, getBusinessBySlug, toggleBusiness, checkSlug, getBusinessPhotos, uploadBusinessPhotos };
