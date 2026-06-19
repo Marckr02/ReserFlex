@@ -1,8 +1,6 @@
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const crypto = require('crypto');
 const { sendTableConfirmationEmail } = require('../services/mail.service');
-
-const prisma = new PrismaClient();
 
 const getTables = async (req, res) => {
   try {
