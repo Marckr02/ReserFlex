@@ -3,7 +3,7 @@
 Sistema de gestión de reservas para múltiples tipos de negocios.
 
 ## Stack
-- **Backend:** Node.js 20 + Express 4 + Prisma 5 + PostgreSQL
+- **Backend:** Node.js 24 + Express 4 + Prisma 7 + PostgreSQL
 - **Frontend:** React 18 + Vite + Tailwind CSS
 - **Deploy:** Railway (Backend) + Veroel (Frontend)
 

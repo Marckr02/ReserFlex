@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Backend API para ReserFlex",
   "main": "src/index.js",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "prisma": {
     "schema": "prisma/schema.prisma"
   },

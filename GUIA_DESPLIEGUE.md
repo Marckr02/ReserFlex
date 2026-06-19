@@ -5,6 +5,7 @@
 - Cuenta en [Vercel.com](https://vercel.com)
 - Cuenta en [GitHub.com](https://github.com)
 - Proyecto Subido a GitHub
+- Node.js 24.x para el backend local y en Railway
 
 ---
 
