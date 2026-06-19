@@ -10,6 +10,8 @@ build/
 .env.local
 .env.*.local
 .env.production
+backend/.env
+
 
 # IDE
 .vscode/
@@ -28,3 +30,4 @@ npm-debug.log*
 # Prisma
 prisma/*.db
 prisma/*.db-journal
+backend/.env
