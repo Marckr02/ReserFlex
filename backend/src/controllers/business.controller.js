@@ -1,9 +1,7 @@
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { sendCredentialsEmail } = require('../services/mail.service');
-
-const prisma = new PrismaClient();
 
 const normalizeSlug = (value) => value
   .toLowerCase()

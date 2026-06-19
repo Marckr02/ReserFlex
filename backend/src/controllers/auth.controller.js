@@ -1,10 +1,8 @@
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { sendVerificationEmail, sendResetEmail } = require('../services/mail.service');
-
-const prisma = new PrismaClient();
 
 const register = async (req, res) => {
   try {
