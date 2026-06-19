@@ -47,8 +47,6 @@ function App() {
           <Route path="/reset-password"  element={<ResetPassword />} />
           <Route path="/catalogo/:slug" element={<Catalogo />} />
           <Route path="/reservar/:slug" element={<Reservar />} />
-           <Route path="/catalogo/:slug/*" element={<Catalogo />} />
-           <Route path="/reservar/:slug/*" element={<Reservar />} />
           <Route path="/mis-reservas" element={<PrivateRoute roles={['CLIENTE']}><MisReservas /></PrivateRoute>} />
           <Route path="/empleado/agenda" element={<PrivateRoute roles={['EMPLEADO']}><Agenda /></PrivateRoute>} />
           <Route path="/perfil" element={<PrivateRoute><Profile /></PrivateRoute>} />

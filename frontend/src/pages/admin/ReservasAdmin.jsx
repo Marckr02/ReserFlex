@@ -4,10 +4,10 @@ import api from '../../services/api';
 import AdminNav from '../../components/AdminNav';
 
 const STATUS_LABELS = {
-  PENDIENTE: { label: 'Pendiente', color: 'bg-yellow-100 text-yellow-800' },
-  COMPLETADA: { label: 'Completada', color: 'bg-green-100 text-green-800' },
-  CANCELADA: { label: 'Cancelada', color: 'bg-red-100 text-red-800' },
-  NO_SE_PRESENTO: { label: 'No se presentó', color: 'bg-gray-100 text-gray-700' },
+  PENDIENTE: { label: 'Pendiente', color: 'bg-amber-100 text-amber-700 border-amber-200' },
+  COMPLETADA: { label: 'Completada', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
+  CANCELADA: { label: 'Cancelada', color: 'bg-red-100 text-red-700 border-red-200' },
+  NO_SE_PRESENTO: { label: 'No se presentó', color: 'bg-slate-100 text-slate-600 border-slate-200' },
 };
 
 export default function ReservasAdmin() {
@@ -182,52 +182,108 @@ export default function ReservasAdmin() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-slate-50">
       <AdminNav />
-      <div className="max-w-5xl mx-auto">
-        <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
-          <h1 className="text-2xl font-bold text-gray-800">Gestión de Reservas</h1>
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Gestión de Reservas</h1>
+            <p className="text-slate-500 text-sm mt-1">Administra y controla todas las reservas</p>
+          </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-2.5 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all font-semibold shadow-lg shadow-blue-500/30"
           >
-            + Nueva reserva
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Nueva reserva
           </button>
         </div>
-        <div className="bg-white rounded-xl shadow p-4 mb-6 flex gap-4 items-center flex-wrap">
-          <label className="text-sm font-medium text-gray-700">Fecha:</label>
-          <input type="date" value={date}
-            onChange={e => setDate(e.target.value)}
-            className="border rounded-lg px-3 py-2 text-sm" />
-          <span className="text-sm text-gray-500">{reservations.length} reservas</span>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-6">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-semibold text-slate-600">Fecha:</label>
+              <input
+                type="date"
+                value={date}
+                onChange={e => setDate(e.target.value)}
+                className="border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex-1 text-right">
+              <span className="text-sm font-semibold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg">
+                {reservations.length} {reservations.length === 1 ? 'reserva' : 'reservas'}
+              </span>
+            </div>
+          </div>
         </div>
-        {message && <p className="text-emerald-700 mb-4">{message}</p>}
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        {loading ? <p>Cargando...</p> : reservations.length === 0 ? (
-          <div className="bg-white rounded-xl shadow p-8 text-center text-gray-400">
-            No hay reservas para esta fecha
+
+        {message && (
+          <div className="mb-6 rounded-xl bg-green-50 border border-green-100 text-green-700 p-4 text-sm flex items-center gap-3">
+            <svg className="h-5 w-5 text-green-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {message}
+          </div>
+        )}
+        {error && (
+          <div className="mb-6 rounded-xl bg-red-50 border border-red-100 text-red-700 p-4 text-sm flex items-center gap-3">
+            <svg className="h-5 w-5 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {error}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="bg-white rounded-2xl h-24 animate-pulse" />
+            ))}
+          </div>
+        ) : reservations.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 text-slate-400 mb-4">
+              <svg className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-slate-800">No hay reservas</h3>
+            <p className="text-slate-500 mt-1">No hay reservas registradas para esta fecha</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {reservations.map(r => (
-              <div key={r.id} className="bg-white rounded-xl shadow p-4 flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
-                <div>
-                  <p className="font-semibold">{r.client?.name || r.guestName || 'Sin cuenta'}</p>
-                  <p className="text-sm text-gray-500">{r.service?.name} — {new Date(r.startTime).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' })}</p>
-                  {r.employee && <p className="text-xs text-gray-400">Empleado: {r.employee.name}</p>}
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_LABELS[r.status]?.color}`}>
-                    {STATUS_LABELS[r.status]?.label}
-                  </span>
-                  <select
-                    value={r.status}
-                    onChange={e => updateStatus(r.id, e.target.value)}
-                    className="text-xs border rounded-lg px-2 py-1">
-                    {Object.entries(STATUS_LABELS).map(([k, v]) => (
-                      <option key={k} value={k}>{v.label}</option>
-                    ))}
-                  </select>
+              <div key={r.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 hover:shadow-md hover:border-slate-200 transition-all">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-600 font-bold">
+                        {(r.client?.name || r.guestName || 'S').charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-slate-800">{r.client?.name || r.guestName || 'Sin cuenta'}</p>
+                        <p className="text-sm text-slate-500">{r.service?.name} — {new Date(r.startTime).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' })}</p>
+                        {r.employee && <p className="text-xs text-slate-400">Empleado: {r.employee.name}</p>}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${STATUS_LABELS[r.status]?.color}`}>
+                      {STATUS_LABELS[r.status]?.label}
+                    </span>
+                    <select
+                      value={r.status}
+                      onChange={e => updateStatus(r.id, e.target.value)}
+                      className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    >
+                      {Object.entries(STATUS_LABELS).map(([k, v]) => (
+                        <option key={k} value={k}>{v.label}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
             ))}
@@ -236,16 +292,26 @@ export default function ReservasAdmin() {
       </div>
 
       {showCreate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-xl max-h-[90vh] overflow-auto">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Nueva reserva manual</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-auto border border-slate-100">
+            <div className="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-slate-800">Nueva reserva manual</h2>
+              <button
+                onClick={() => setShowCreate(false)}
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+              >
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
 
-            <form onSubmit={handleCreateManualReservation} className="space-y-4">
-              <div className="grid gap-3 md:grid-cols-2">
+            <form onSubmit={handleCreateManualReservation} className="p-6 space-y-5">
+              <div className="grid gap-5 md:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">Servicio</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Servicio</label>
                   <select
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     value={createForm.serviceId}
                     onChange={(e) => setCreateForm({ ...createForm, serviceId: e.target.value })}
                     required
@@ -258,9 +324,9 @@ export default function ReservasAdmin() {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">Empleado (opcional)</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Empleado (opcional)</label>
                   <select
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     value={createForm.employeeId}
                     onChange={(e) => setCreateForm({ ...createForm, employeeId: e.target.value })}
                   >
@@ -272,23 +338,23 @@ export default function ReservasAdmin() {
                 </div>
               </div>
 
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-5 md:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">Fecha</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Fecha</label>
                   <input
                     type="date"
                     min={new Date().toISOString().split('T')[0]}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     value={createForm.date}
                     onChange={(e) => setCreateForm({ ...createForm, date: e.target.value })}
                     required
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">Buscar cliente (nombre o email)</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Buscar cliente</label>
                   <input
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                    placeholder="Ej: marco@correo.com"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    placeholder="Nombre o email"
                     value={clientQuery}
                     onChange={(e) => {
                       setClientQuery(e.target.value);
@@ -296,9 +362,9 @@ export default function ReservasAdmin() {
                       setCreateForm({ ...createForm, clientId: '' });
                     }}
                   />
-                  {searchingClients && <p className="mt-1 text-xs text-gray-500">Buscando...</p>}
+                  {searchingClients && <p className="mt-1 text-xs text-slate-500">Buscando...</p>}
                   {!selectedClient && clientResults.length > 0 && (
-                    <div className="mt-2 max-h-36 overflow-auto rounded-lg border border-gray-200 bg-white">
+                    <div className="mt-2 max-h-36 overflow-auto rounded-xl border border-slate-200 bg-white">
                       {clientResults.map((client) => (
                         <button
                           key={client.id}
@@ -309,20 +375,20 @@ export default function ReservasAdmin() {
                             setClientQuery(`${client.name} (${client.email})`);
                             setClientResults([]);
                           }}
-                          className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
+                          className="block w-full px-4 py-2.5 text-left text-sm hover:bg-slate-50 transition-colors"
                         >
-                          <span className="font-medium text-gray-800">{client.name}</span>
-                          <span className="ml-2 text-gray-500">{client.email}</span>
+                          <span className="font-medium text-slate-800">{client.name}</span>
+                          <span className="ml-2 text-slate-500">{client.email}</span>
                         </button>
                       ))}
                     </div>
                   )}
                   {selectedClient && (
-                    <div className="mt-2 flex items-center justify-between rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-                      <span>Cliente seleccionado: {selectedClient.name}</span>
+                    <div className="mt-2 flex items-center justify-between rounded-xl bg-green-50 border border-green-100 px-4 py-2.5 text-sm text-green-700">
+                      <span className="font-medium">Cliente: {selectedClient.name}</span>
                       <button
                         type="button"
-                        className="text-emerald-700 hover:underline"
+                        className="text-green-700 hover:underline text-xs"
                         onClick={() => {
                           setSelectedClient(null);
                           setClientQuery('');
@@ -337,22 +403,22 @@ export default function ReservasAdmin() {
               </div>
 
               {!createForm.clientId && (
-                <div className="grid gap-3 md:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-3">
                   <input
-                    className="rounded-lg border border-gray-300 px-3 py-2"
+                    className="border border-slate-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     placeholder="Nombre invitado"
                     value={createForm.guestName}
                     onChange={(e) => setCreateForm({ ...createForm, guestName: e.target.value })}
                   />
                   <input
                     type="email"
-                    className="rounded-lg border border-gray-300 px-3 py-2"
+                    className="border border-slate-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     placeholder="Correo invitado"
                     value={createForm.guestEmail}
                     onChange={(e) => setCreateForm({ ...createForm, guestEmail: e.target.value })}
                   />
                   <input
-                    className="rounded-lg border border-gray-300 px-3 py-2"
+                    className="border border-slate-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     placeholder="Teléfono invitado"
                     value={createForm.guestPhone}
                     onChange={(e) => setCreateForm({ ...createForm, guestPhone: e.target.value })}
@@ -361,15 +427,21 @@ export default function ReservasAdmin() {
               )}
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">Slots disponibles</label>
-                <div className="grid grid-cols-3 gap-2 md:grid-cols-5">
+                <label className="block text-sm font-semibold text-slate-700 mb-3">Slots disponibles</label>
+                <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
                   {slots.map((slot) => (
                     <button
                       key={`${slot.startTime}-${slot.endTime}`}
                       type="button"
                       disabled={!slot.available}
                       onClick={() => slot.available && setSelectedSlot(slot)}
-                      className={`rounded-lg border px-2 py-2 text-xs font-medium ${!slot.available ? 'bg-gray-100 text-gray-400' : selectedSlot?.startTime === slot.startTime ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'}`}
+                      className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition-all ${
+                        !slot.available
+                          ? 'bg-slate-100 text-slate-400 border-slate-100 cursor-not-allowed'
+                          : selectedSlot?.startTime === slot.startTime
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/30'
+                            : 'bg-white text-slate-700 border-slate-200 hover:border-blue-400 hover:bg-blue-50'
+                      }`}
                     >
                       {slot.startTime}
                     </button>
@@ -378,27 +450,27 @@ export default function ReservasAdmin() {
               </div>
 
               <textarea
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 rows={3}
                 placeholder="Notas (opcional)"
                 value={createForm.notes}
                 onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })}
               />
 
-              <div className="flex gap-3">
-                <button
-                  type="submit"
-                  disabled={creating}
-                  className="flex-1 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {creating ? 'Creando...' : 'Confirmar reserva'}
-                </button>
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowCreate(false)}
-                  className="flex-1 rounded-lg bg-gray-200 px-4 py-2 font-semibold text-gray-700 hover:bg-gray-300"
+                  className="flex-1 border border-slate-200 text-slate-600 py-3 rounded-xl hover:bg-slate-50 transition-colors font-semibold"
                 >
                   Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 transition-all font-semibold shadow-lg shadow-blue-500/30"
+                >
+                  {creating ? 'Creando...' : 'Confirmar reserva'}
                 </button>
               </div>
             </form>
