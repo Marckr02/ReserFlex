@@ -52,9 +52,6 @@ function App() {
           <Route path="/mis-reservas" element={<PrivateRoute roles={['CLIENTE']}><MisReservas /></PrivateRoute>} />
           <Route path="/empleado/agenda" element={<PrivateRoute roles={['EMPLEADO']}><Agenda /></PrivateRoute>} />
           <Route path="/perfil" element={<PrivateRoute><Profile /></PrivateRoute>} />
-          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-          <Route path="/admin/index" element={<Navigate to="/admin/dashboard" replace />} />
-          <Route path="/admin/*" element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="/admin/dashboard" element={<PrivateRoute roles={['SUPER_ADMIN', 'ADMIN_NEGOCIO']}><Dashboard /></PrivateRoute>} />
           <Route path="/admin/negocios" element={<PrivateRoute roles={['SUPER_ADMIN']}><Dashboard /></PrivateRoute>} />
           <Route path="/admin/horarios" element={<PrivateRoute roles={['ADMIN_NEGOCIO', 'SUPER_ADMIN']}><Horarios /></PrivateRoute>} />
@@ -63,6 +60,9 @@ function App() {
           <Route path="/admin/reservas" element={<PrivateRoute roles={['ADMIN_NEGOCIO', 'SUPER_ADMIN']}><ReservasAdmin /></PrivateRoute>} />
           <Route path="/admin/metricas" element={<PrivateRoute roles={['ADMIN_NEGOCIO', 'SUPER_ADMIN']}><Metricas /></PrivateRoute>} />
           <Route path="/admin/plano/:businessId?" element={<PrivateRoute roles={['ADMIN_NEGOCIO', 'SUPER_ADMIN']}><PlanoRestaurante /></PrivateRoute>} />
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/index" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/*" element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="/" element={<Navigate to="/login" />} />
           <Route
             path="/reservas/:slug"

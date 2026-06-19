@@ -155,10 +155,12 @@ const uploadBusinessPhotos = async (req, res) => {
       return res.status(400).json({ message: 'Debes seleccionar al menos una imagen' });
     }
 
+    const backendUrl = process.env.BACKEND_URL || `${req.protocol}://${req.get('host')}`;
+
     const created = await Promise.all(files.map((file, index) => prisma.businessPhoto.create({
       data: {
         businessId: req.params.id,
-        url: `/uploads/${file.filename}`,
+        url: `${backendUrl}/uploads/${file.filename}`,
         order: index
       }
     })));
