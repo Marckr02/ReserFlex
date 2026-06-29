@@ -43,10 +43,10 @@ export default function BusinessPortal() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50/50">
+      <div className={`min-h-screen ${theme.heroBg} flex items-center justify-center`}>
         <div className="text-center space-y-3">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-slate-600 mx-auto"></div>
-          <p className="text-slate-500 text-sm font-semibold">Cargando portal del negocio...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-slate-400 mx-auto"></div>
+          <p className="text-slate-500 text-sm font-medium">Cargando...</p>
         </div>
       </div>
     );
@@ -54,9 +54,9 @@ export default function BusinessPortal() {
 
   if (error || !business) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50/50 px-4">
-        <div className="bg-white p-8 rounded-3xl shadow-lg border border-slate-100 w-full max-w-md text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-rose-50 text-rose-500 mb-4">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 w-full max-w-md text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400 mb-4">
             <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
             </svg>
@@ -69,122 +69,138 @@ export default function BusinessPortal() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-16 relative">
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-50/30 rounded-full blur-3xl pointer-events-none"></div>
+    <div className={`min-h-screen ${theme.heroBg} pb-16`}>
 
-      {/* Hero Banner with Dynamic Gradient Theme */}
-      <div className={`bg-gradient-to-r ${theme.gradient} py-20 text-white text-center relative overflow-hidden shadow-md`}>
-        <div className="absolute inset-0 opacity-15 mix-blend-overlay">
-          <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <path d="M0,50 Q25,100 50,50 T100,50 L100,100 L0,100 Z" fill="currentColor"></path>
-          </svg>
-        </div>
-        
-        <div className="mx-auto max-w-5xl px-4 relative z-10 space-y-4">
-          {business.logoUrl ? (
-            <img
-              src={business.logoUrl}
-              alt={business.name}
-              className="w-24 h-24 mx-auto rounded-full object-cover shadow-md border-2 border-white/20"
-            />
-          ) : (
-            <div className={`w-16 h-16 mx-auto rounded-2xl ${theme.softBg} ${theme.primaryText} flex items-center justify-center font-black text-2xl shadow-sm`}>
-              {business.name.charAt(0)}
+      {/* Editorial Hero */}
+      <div className={`${theme.heroBg} border-b border-slate-200/60`}>
+        <div className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:gap-12 gap-8">
+
+            {/* Left: Logo + Name + Type */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start gap-4">
+                {business.logoUrl ? (
+                  <img
+                    src={business.logoUrl}
+                    alt={business.name}
+                    className="w-14 h-14 rounded-xl object-cover shadow-sm border border-slate-200/80 shrink-0"
+                  />
+                ) : (
+                  <div className={`w-14 h-14 rounded-xl ${theme.softBg} flex items-center justify-center shrink-0`}>
+                    <span className={`text-2xl font-black ${theme.primaryText}`}>
+                      {business.name.charAt(0)}
+                    </span>
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className={`text-[10px] uppercase tracking-[0.3em] font-bold ${theme.accentText} mb-1`}>
+                    {BUSINESS_TYPES[business.type] || business.type}
+                  </p>
+                  <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight leading-none">
+                    {business.name}
+                  </h1>
+                  <div className="flex items-center gap-2 mt-3 text-sm text-slate-500 font-medium">
+                    <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>{business.address}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons - left aligned below info */}
+              <div className="flex flex-wrap gap-3 mt-8">
+                <Link
+                  to={`/catalogo/${slug}`}
+                  className={`rounded-xl ${theme.button} px-6 py-3 font-bold tracking-wide transition shadow-sm hover:shadow text-sm`}
+                >
+                  Ver servicios
+                </Link>
+                <Link
+                  to={`/reservar/${slug}`}
+                  className={`rounded-xl border-2 border-slate-900 bg-transparent hover:bg-slate-900 hover:text-white text-slate-900 px-6 py-3 font-bold tracking-wide transition text-sm`}
+                >
+                  Reservar ahora
+                </Link>
+              </div>
             </div>
-          )}
-          
-          <h1 className="text-4xl font-extrabold tracking-tight filter drop-shadow-md">{business.name}</h1>
-          <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${theme.softBg} ${theme.primaryText}`}>
-            {BUSINESS_TYPES[business.type] || business.type}
-          </span>
+
+            {/* Vertical divider - desktop only */}
+            <div className="hidden lg:block w-px bg-slate-200/80 self-stretch"></div>
+
+            {/* Right: Quick info panel */}
+            <div className="lg:w-72 space-y-4">
+              <div className="rounded-2xl bg-white/80 backdrop-blur-sm border border-slate-200/60 p-5 shadow-sm">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Horario</h2>
+                <p className="text-sm text-slate-600 font-medium">
+                  Consulta horarios disponibles para cada servicio en el catálogo.
+                </p>
+              </div>
+
+              {business.type === 'RESTAURANTE' && (
+                <div className="rounded-2xl bg-white/80 backdrop-blur-sm border border-slate-200/60 p-5 shadow-sm">
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Reservación de mesa</h2>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Disponible en el plano interactivo más abajo.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Main Container */}
-      <div className="mx-auto max-w-5xl px-4 -mt-8 relative z-10 pb-8">
-        <div className="rounded-3xl bg-white p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-8">
-          
-          {/* Address Bar */}
-          <div className="flex items-center gap-2 text-slate-500 font-semibold text-sm border-b border-slate-100 pb-5">
-            <svg className="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <span>{business.address}</span>
-          </div>
+      {/* Main Content */}
+      <div className="mx-auto max-w-5xl px-4 py-10 space-y-10">
 
-          {/* Quick Actions Portal */}
-          <div className="space-y-3">
-            <h2 className="text-xl font-bold text-slate-800 tracking-tight text-center sm:text-left">¿Qué deseas realizar hoy?</h2>
-            <div className="grid gap-4 sm:grid-cols-2 max-w-2xl mx-auto pt-2">
-              <Link
-                to={`/catalogo/${slug}`}
-                className={`rounded-2xl ${theme.button} px-5 py-4 font-bold tracking-wide transition shadow-sm hover:shadow text-center flex items-center justify-center gap-2`}
-              >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-                </svg>
-                Ver Catálogo de Servicios
-              </Link>
-              <Link
-                to={`/reservar/${slug}`}
-                className="rounded-2xl bg-slate-900 hover:bg-slate-800 text-white px-5 py-4 font-bold tracking-wide transition shadow-sm hover:shadow text-center flex items-center justify-center gap-2 transform active:scale-95"
-              >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-                Reservar Cita Online
-              </Link>
+        {/* Table reservation for Restaurant tenants */}
+        {business.type === 'RESTAURANTE' && (
+          <div className="rounded-3xl bg-white border border-slate-200/80 p-6 shadow-sm">
+            <div className="mb-1">
+              <h2 className="text-xl font-bold text-slate-900 tracking-tight">Plano de mesas</h2>
+              <p className="text-xs text-slate-500 mt-0.5 font-medium">
+                Selecciona una mesa disponible y reserva directamente.
+              </p>
             </div>
+            <RestaurantFloorPlan businessId={business.id} />
           </div>
+        )}
 
-          {/* Table reservation for Restaurant tenants */}
-          {business.type === 'RESTAURANTE' && (
-            <div className="mt-8 rounded-3xl border border-slate-200/80 bg-slate-50/50 p-5 sm:p-6 space-y-4">
-              <div>
-                <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                  <svg className="h-5.5 w-5.5 text-rose-500" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                  </svg>
-                  Reservar Mesa Física
-                </h2>
-                <p className="text-xs text-slate-500 font-semibold mt-1">
-                  Visualiza la disponibilidad en tiempo real del plano de mesas y confirma tu ubicación favorita.
-                </p>
-              </div>
-              <RestaurantFloorPlan businessId={business.id} />
+        {/* Photo Gallery */}
+        {photos.length > 0 && (
+          <div>
+            <div className="mb-4">
+              <h2 className="text-lg font-bold text-slate-800 tracking-tight">Galería</h2>
+              <p className="text-xs text-slate-400 mt-0.5 font-medium">Recorre nuestras instalaciones</p>
             </div>
-          )}
-
-          {/* Photo Gallery Section */}
-          {photos.length > 0 && (
-            <div className="border-t border-slate-100 pt-6">
-              <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
-                <div>
-                  <h2 className="text-lg font-bold text-slate-800 tracking-tight">Galería de Fotos</h2>
-                  <p className="text-xs text-slate-400 font-semibold mt-0.5">Recorre nuestras instalaciones y especialidades</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {photos.slice(0, 6).map((photo, i) => (
+                <div
+                  key={photo.id}
+                  className={`overflow-hidden rounded-2xl border border-slate-200/60 shadow-xs group transition-all duration-300 hover:shadow-md ${
+                    i === 0 && photos.length > 1 ? 'sm:col-span-2 sm:row-span-2' : ''
+                  }`}
+                >
+                  <img
+                    src={photo.url}
+                    alt={photo.caption || business.name}
+                    className={`w-full object-cover transition-transform duration-500 group-hover:scale-105 ${
+                      i === 0 && photos.length > 1 ? 'h-64 sm:h-full' : 'h-36'
+                    }`}
+                  />
                 </div>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                {photos.slice(0, 6).map((photo) => (
-                  <div key={photo.id} className="overflow-hidden rounded-2xl border border-slate-100 shadow-xs hover:shadow-md transition duration-300 group">
-                    <img 
-                      src={photo.url} 
-                      alt={photo.caption || business.name} 
-                      className="h-44 w-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                    />
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
 
-        <div className="text-center mt-6">
-          <Link to="/login" className="text-sm font-semibold text-slate-500 hover:text-slate-800 transition">
-            ¿Eres administrador o empleado? Acceso al Panel →
-          </Link>
-        </div>
+      {/* Footer link */}
+      <div className="text-center pt-4">
+        <Link to="/login" className="text-xs font-semibold text-slate-400 hover:text-slate-600 transition tracking-wide">
+          Acceso para administradores →
+        </Link>
       </div>
     </div>
   );
