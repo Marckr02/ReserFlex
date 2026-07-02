@@ -1,0 +1,14 @@
+Title,Description,State,Iteration Path,Area Path,Priority,Story Points
+"HU19 - Diseño responsive completo","Como usuario del sistema, quiero que la interfaz se adapte correctamente a dispositivos móviles y tablets, para poder usar ReserFlex desde cualquier dispositivo sin distorsiones.","Todo","Sprint 3","ReserFlex",1,5
+"HU21 - Preview URL única al registrar negocio","Como Super Admin, quiero ver en tiempo real cómo quedará la URL del negocio mientras escribo el nombre, para confirmar el slug antes de crearlo.","Todo","Sprint 3","ReserFlex",1,2
+"HU22 - Búsqueda y filtros en portal público","Como cliente que visita el portal de un negocio, quiero poder buscar y filtrar los servicios disponibles, para encontrar rápidamente lo que necesito.","Todo","Sprint 3","ReserFlex",1,5
+"HU31 - Portal visual de mesas para restaurantes","Como cliente de un restaurante, quiero ver el plano visual de las mesas y su disponibilidad en tiempo real, para elegir mi mesa y reservar directamente.","Todo","Sprint 3","ReserFlex",1,6
+"HU20 - Onboarding para nuevos administradores","Implementar flujo de onboarding con stepper de 4 pasos para nuevos administradores de negocio.","Todo","Sprint 4","ReserFlex",1,3
+"HU23 - Sistema de reseñas y calificaciones","Como cliente, quiero dejar reseñas y calificaciones de los servicios recibidos para compartir mi experiencia.","Todo","Sprint 4","ReserFlex",1,5
+"HU24 - Respuesta del negocio a reseñas","Como administrador, quiero poder responder a las reseñas de los clientes para interactuar con ellos.","Todo","Sprint 4","ReserFlex",1,2
+"HU25 - Exportar reservas a Excel/PDF","Como administrador, quiero exportar las reservas a Excel y PDF para tener reportes offline.","Todo","Sprint 4","ReserFlex",1,5
+"HU26 - Reporte de ingresos estimados","Como administrador, quiero ver un reporte de ingresos estimados por período para conocer la rentabilidad del negocio.","Todo","Sprint 4","ReserFlex",1,2
+"HU27 - Perfil público del negocio mejorado","Mejorar el perfil público del negocio con horarios, detalle de servicios y reseñas paginadas.","Todo","Sprint 5","ReserFlex",1,3
+"HU28 - Historial de visitas y cliente frecuente","Implementar historial de visitas y badge de cliente frecuente para negocios con muchas reservas.","Todo","Sprint 5","ReserFlex",1,5
+"HU29 - Descuentos para clientes frecuentes","Implementar sistema de descuentos automáticos para clientes frecuentes basado en número de reservas.","Todo","Sprint 5","ReserFlex",1,5
+"HU30 - Landing page pública de ReserFlex","Crear landing page pública con hero, features y CTA para dar a conocer la plataforma.","Todo","Sprint 5","ReserFlex",1,3

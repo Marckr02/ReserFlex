@@ -1,0 +1,1 @@
+SELECT gen_random_uuid() AS test_uuid;

@@ -70,6 +70,7 @@ model Business {
   reservations Reservation[]
   tables      RestaurantTable[]
   photos      BusinessPhoto[]
+  reviews     Review[]
 }
 
 // ── Modelos nuevos Sprint 2 ───────────────────────────────────────────────────
@@ -128,12 +129,16 @@ model Reservation {
   guestEmail   String?
   guestPhone   String?
   accessCode   String?           // codigo de 6 digitos para gestionar sin cuenta
+  // Campos Sprint 4
+  price           Float?         // copiado de Service.price al momento de reservar
+  discountPercent Float?         // % de descuento aplicado si es cliente frecuente
   createdAt    DateTime          @default(now())
 
   business     Business @relation(fields: [businessId], references: [id])
   service      Service  @relation(fields: [serviceId], references: [id])
   client       User?    @relation("ClientReservations", fields: [clientId], references: [id])
   employee     User?    @relation("EmployeeReservations", fields: [employeeId], references: [id])
+  review       Review?
 }
 
 model RestaurantTable {
@@ -180,4 +185,19 @@ model BusinessPhoto {
   createdAt  DateTime @default(now())
 
   business   Business @relation(fields: [businessId], references: [id])
+}
+
+// ── Modelos Sprint 4 ───────────────────────────────────────────────────────────
+
+model Review {
+  id            String      @id @default(uuid())
+  reservationId String      @unique
+  businessId    String
+  rating        Int         // 1-5
+  comment       String?
+  reply         String?
+  createdAt     DateTime    @default(now())
+
+  reservation Reservation @relation(fields: [reservationId], references: [id])
+  business    Business    @relation(fields: [businessId], references: [id])
 }

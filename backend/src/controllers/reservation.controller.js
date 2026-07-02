@@ -82,6 +82,7 @@ const createReservation = async (req, res) => {
         clientId: req.user.id,
         employeeId: employeeId || null,
         startTime: start, endTime: end, notes,
+        price: service.price,
         status: 'PENDIENTE'
       },
       include: { service: true, business: true, employee: true }
@@ -113,7 +114,8 @@ const createGuestReservation = async (req, res) => {
         employeeId: employeeId || null,
         startTime: start, endTime: end, notes,
         guestName, guestEmail, guestPhone,
-        accessCode, status: 'PENDIENTE'
+        accessCode, status: 'PENDIENTE',
+        price: service.price
       },
       include: { service: true, business: true }
     });
@@ -179,6 +181,7 @@ const createAdminReservation = async (req, res) => {
         guestEmail: clientId ? null : guestEmail,
         guestPhone: clientId ? null : guestPhone,
         accessCode,
+        price: service.price,
         status: 'PENDIENTE'
       },
       include: {
@@ -405,10 +408,160 @@ const getMetrics = async (req, res) => {
   }
 };
 
+// GET /api/reservations/export/:businessId?format=xlsx|pdf — HU25
+const exportReservations = async (req, res) => {
+  try {
+    const { businessId } = req.params;
+    const { format = 'xlsx', startDate, endDate } = req.query;
+
+    let where = { businessId, status: { not: 'CANCELADA' } };
+    if (startDate || endDate) {
+      where.startTime = {};
+      if (startDate) where.startTime.gte = new Date(startDate);
+      if (endDate) where.startTime.lte = new Date(`${endDate}T23:59:59`);
+    }
+
+    const reservations = await prisma.reservation.findMany({
+      where,
+      include: {
+        service: { select: { name: true, price: true } },
+        employee: { select: { name: true } },
+        client: { select: { name: true, email: true } }
+      },
+      orderBy: { startTime: 'desc' }
+    });
+
+    const data = reservations.map(r => ({
+      'Fecha': new Date(r.startTime).toLocaleDateString('es-EC'),
+      'Hora': new Date(r.startTime).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }),
+      'Servicio': r.service?.name || 'N/A',
+      'Precio': r.price || r.service?.price || 0,
+      'Cliente': r.client?.name || r.guestName || 'Invitado',
+      'Email': r.client?.email || r.guestEmail || 'N/A',
+      'Teléfono': r.client?.email ? '' : (r.guestPhone || 'N/A'),
+      'Empleado': r.employee?.name || 'No asignado',
+      'Estado': r.status
+    }));
+
+    if (format === 'xlsx') {
+      const XLSX = require('xlsx');
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Reservas');
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+      res.setHeader('Content-Disposition', 'attachment; filename=reservas.xlsx');
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      return res.send(buffer);
+    }
+
+    if (format === 'pdf') {
+      const PDFDocument = require('pdfkit');
+      const doc = new PDFDocument({ margin: 50 });
+      res.setHeader('Content-Disposition', 'attachment; filename=reservas.pdf');
+      res.setHeader('Content-Type', 'application/pdf');
+      doc.pipe(res);
+
+      doc.fontSize(20).text('Reporte de Reservas', { align: 'center' });
+      doc.fontSize(12).text(`Generado: ${new Date().toLocaleDateString('es-EC')}`, { align: 'center' });
+      doc.moveDown(2);
+
+      const tableTop = doc.y;
+      const colWidths = [70, 60, 100, 60, 80];
+      const headers = ['Fecha', 'Hora', 'Servicio', 'Precio', 'Cliente'];
+
+      doc.fontSize(10).font('Helvetica-Bold');
+      let x = 50;
+      headers.forEach((h, i) => {
+        doc.text(h, x, tableTop, { width: colWidths[i], align: 'left' });
+        x += colWidths[i];
+      });
+
+      doc.font('Helvetica').fontSize(9);
+      let y = tableTop + 20;
+      data.slice(0, 50).forEach(row => {
+        if (y > 700) { doc.addPage(); y = 50; }
+        x = 50;
+        const values = [row.Fecha, row.Hora, row.Servicio, `$${row.Precio}`, row.Cliente];
+        values.forEach((v, i) => {
+          doc.text(v.toString().substring(0, 20), x, y, { width: colWidths[i], align: 'left' });
+          x += colWidths[i];
+        });
+        y += 18;
+      });
+
+      doc.end();
+      return;
+    }
+
+    res.status(400).json({ message: 'Formato no soportado. Use xlsx o pdf' });
+  } catch (err) {
+    console.error('Error exportReservations:', err);
+    res.status(500).json({ message: 'Error al exportar reservas' });
+  }
+};
+
+// GET /api/reservations/income/:businessId?period=month — HU26
+const getIncomeReport = async (req, res) => {
+  try {
+    const { businessId } = req.params;
+    const { period = 'month' } = req.query;
+
+    let startDate;
+    const now = new Date();
+    if (period === 'day') {
+      startDate = new Date(now.setHours(0, 0, 0, 0));
+    } else if (period === 'week') {
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() - now.getDay());
+    } else {
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+
+    const reservations = await prisma.reservation.findMany({
+      where: {
+        businessId,
+        status: 'COMPLETADA',
+        startTime: { gte: startDate }
+      },
+      include: { service: true }
+    });
+
+    let totalIncome = 0;
+    const byService = {};
+    const byDay = {};
+
+    reservations.forEach(r => {
+      const price = r.price || r.service?.price || 0;
+      totalIncome += price;
+
+      const serviceName = r.service?.name || 'Otro';
+      byService[serviceName] = (byService[serviceName] || 0) + price;
+
+      const dayKey = new Date(r.startTime).toLocaleDateString('es-EC');
+      byDay[dayKey] = (byDay[dayKey] || 0) + price;
+    });
+
+    res.json({
+      period,
+      startDate: startDate.toISOString(),
+      totalIncome: parseFloat(totalIncome.toFixed(2)),
+      totalReservations: reservations.length,
+      averagePerReservation: reservations.length > 0
+        ? parseFloat((totalIncome / reservations.length).toFixed(2)) : 0,
+      byService,
+      byDay
+    });
+  } catch (err) {
+    console.error('Error getIncomeReport:', err);
+    res.status(500).json({ message: 'Error al obtener reporte de ingresos' });
+  }
+};
+
 module.exports = {
   getSlots, createReservation, createGuestReservation,
   createAdminReservation,
   searchClients,
   getMyReservations, getEmployeeReservations, getBusinessReservations,
-  cancelReservation, rescheduleReservation, updateReservationStatus, getMetrics
+  cancelReservation, rescheduleReservation, updateReservationStatus, getMetrics,
+  exportReservations, getIncomeReport
 };

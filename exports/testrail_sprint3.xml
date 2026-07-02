@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suite>
+	<id>S1</id>
+	<name>Sprint 3</name>
+	<description>Casos de prueba Sprint 3 - ReserFlex</description>
+	<sections>
+		<section>
+		<name>HU19 - Diseño Responsive</name>
+		<description></description>
+						<cases>
+												<case>
+				<id>C1</id>
+				<title>HU19-CA1: Login responsive 375px</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU19, Responsive</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Dispositivo con ancho de pantalla 375px (emulador iPhone SE)</preconds>
+											<steps>1. Abrir /login en dispositivo con ancho 375px
+2. Verificar que el formulario ocupa el ancho completo
+3. Verificar que no hay desbordamiento horizontal
+4. Verificar que no hay scroll horizontal</steps>
+											<expected>El formulario se muestra correctamente sin scroll horizontal</expected>
+									</custom>
+								<is_converted>0</is_converted>
+			</case>
+															<case>
+				<id>C2</id>
+				<title>HU19-CA2: Portal táctil en móvil</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU19, Responsive</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Acceso a portal de negocio desde dispositivo móvil</preconds>
+											<steps>1. Acceder a /reservas/:slug desde móvil
+2. Navegar por el catálogo de servicios
+3. Seleccionar un slot disponible
+4. Verificar que todos los elementos táctiles tienen mínimo 44px
+5. Verificar que el texto es legible</steps>
+											<expected>Todos los elementos son táctiles (mínimo 44px) y legibles</expected>
+									</custom>
+								<is_converted>0</is_converted>
+			</case>
+															<case>
+				<id>C3</id>
+				<title>HU19-CA3: Panel admin en tablet 768px</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU19, Responsive</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Acceso al panel de administración desde tablet (768px)</preconds>
+											<steps>1. Acceder al panel admin desde tablet (768px)
+2. Visualizar ReservasAdmin
+3. Visualizar Métricas
+4. Verificar que los elementos se reorganizan en columnas adaptativas
+5. Verificar que no hay pérdida de información</steps>
+											<expected>Elementos se reorganizan sin pérdida de información</expected>
+									</custom>
+								<is_converted>0</is_converted>
+			</case>
+															<case>
+				<id>C4</id>
+				<title>HU19-CA4: Agenda empleado en móvil</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>Medium</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU19, Responsive</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Acceso a la agenda de empleado desde móvil</preconds>
+											<steps>1. Acceder a la agenda de empleado desde móvil
+2. Visualizar la vista de citas
+3. Verificar que las tarjetas son legibles
+4. Verificar que los botones tienen tamaño mínimo táctil de 44px</steps>
+											<expected>Tarjetas legibles y botones ≥44px</expected>
+									</custom>
+								<is_converted>0</is_converted>
+			</case>
+							</cases>
+							</section>
+			<section>
+		<name>HU21 - Preview URL</name>
+		<description></description>
+						<cases>
+												<case>
+				<id>C5</id>
+				<title>HU21-CA1: Preview slug al salir del campo nombre</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU21, URL Slug</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Usuario Super Admin logueado</preconds>
+											<steps>1. Como Super Admin, ir a Dashboard
+2. Abrir modal de crear negocio
+3. Escribir nombre del negocio
+4. Hacer clic fuera del campo nombre (onBlur)
+5. Verificar que aparece el preview</steps>
+											<expected>Se muestra: "Tu URL: /reservas/nombre-negocio"</expected>
+									</custom>
+								<is_converted>0</is_converted>
+			</case>
+															<case>
+				<id>C6</id>
+				<title>HU21-CA2: Slug duplicado muestra advertencia</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU21, URL Slug</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Usuario Super Admin logueado</preconds>
+											<steps>1. Escribir un nombre de negocio que ya existe
+2. Hacer clic fuera del campo nombre
+3. Verificar que aparece advertencia en rojo</steps>
+											<expected>Se muestra texto en rojo: "Ya está en uso"</expected>
+									</custom>
+								<is_converted>0</is_converted>
+			</case>
+							</cases>
+							</section>
+			<section>
+		<name>HU22 - Búsqueda y Filtros</name>
+		<description></description>
+						<cases>
+												<case>
+				<id>C7</id>
+				<title>HU22-CA1: Búsqueda en tiempo real</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU22, Filtros</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Portal público con catálogo de servicios</preconds>
+											<steps>1. En el portal público, escribir en el buscador (ej: 'corte')
+2. Verificar que el listado se filtra instantáneamente
+3. Verificar que solo muestra servicios que coinciden
+4. Verificar que NO hace llamadas al servidor</steps>
+											<expected>Filtrado instantáneo sin llamadas al servidor</expected>
+									</custom>
+								<is_converted>0</is_converted>
+			</case>
+															<case>
+				<id>C8</id>
+				<title>HU22-CA2: Filtro de precio por rango</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU22, Filtros</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Portal público con catálogo de servicios</preconds>
+											<steps>1. Abrir filtros
+2. Seleccionar un rango de precio (ej: '20-50')
+3. Verificar que solo se muestran servicios con precio entre 20 y 50</steps>
+											<expected>Solo se muestran servicios dentro del rango seleccionado</expected>
+									</custom>
+								<is_converted>0</is_converted>
+			</case>
+															<case>
+				<id>C9</id>
+				<title>HU22-CA3: Filtro de duración</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU22, Filtros</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Portal público con catálogo de servicios</preconds>
+											<steps>1. Abrir filtros
+2. Seleccionar 'menos de 30 min'
+3. Verificar que solo aparecen servicios con duración ≤ 30 minutos</steps>
+											<expected>Solo se muestran servicios con duración ≤ 30 minutos</expected>
+									</custom>
+								<is_converted>0</is_converted>
+			</case>
+															<case>
+				<id>C10</id>
+				<title>HU22-CA4: Estado vacío con botón limpiar</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>Medium</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU22, Filtros</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Portal público con catálogo de servicios</preconds>
+											<steps>1. Aplicar filtros que no coinciden con ningún servicio
+2. Verificar mensaje
+3. Verificar botón 'Limpiar filtros'</steps>
+											<expected>Mensaje "No se encontraron servicios con estos filtros" y botón visible</expected>
+									</custom>
+								<is_converted>0</is_converted>
+			</case>
+							</cases>
+							</section>
+			<section>
+		<name>HU31 - Portal Visual Mesas</name>
+		<description></description>
+						<cases>
+												<case>
+				<id>C11</id>
+				<title>HU31-CA1: Plano con mesas coloreadas por estado</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU31, Restaurante</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Negocio tipo RESTAURANTE con mesas configuradas</preconds>
+											<steps>1. Acceder al portal de un negocio tipo RESTAURANTE
+2. Ir a la sección de reservas de mesa
+3. Verificar color verde = disponible
+4. Verificar color rojo = ocupada
+5. Verificar color amarillo = pronto libre</steps>
+											<expected>Mesas coloreadas correctamente según su estado</expected>
+									</custom>
+								<is_converted>0</is_converted>
+			</case>
+															<case>
+				<id>C12</id>
+				<title>HU31-CA2: Modal de reserva al clic en mesa disponible</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU31, Restaurante</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Plano de mesas visible con al menos una mesa disponible</preconds>
+											<steps>1. Clic en una mesa verde (disponible)
+2. Verificar que se abre el modal de reserva
+3. Seleccionar fecha, hora, número de personas
+4. Completar datos del invitado o iniciar sesión
+5. Confirmar la reserva</steps>
+											<expected>Modal abre, reserva se confirma exitosamente</expected>
+									</custom>
+								<is_converted>0</is_converted>
+			</case>
+															<case>
+				<id>C13</id>
+				<title>HU31-CA3: Mesa ocupada muestra mensaje de error</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU31, Restaurante</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Plano de mesas con al menos una mesa ocupada</preconds>
+											<steps>1. Clic en una mesa roja (ocupada)
+2. Verificar mensaje de error</steps>
+											<expected>Mensaje: "Esta mesa está ocupada, elige otra"</expected>
+									</custom>
+								<is_converted>0</is_converted>
+			</case>
+															<case>
+				<id>C14</id>
+				<title>HU31-CA4: Galería de fotos del restaurante</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>Medium</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU31, Restaurante</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Negocio tipo RESTAURANTE con fotos subidas</preconds>
+											<steps>1. Acceder al portal de un RESTAURANTE
+2. Verificar que se muestra galería de fotos
+3. Verificar que las imágenes se cargan correctamente</steps>
+											<expected>Galería visible con fotos del restaurante</expected>
+									</custom>
+								<is_converted>0</is_converted>
+			</case>
+															<case>
+				<id>C15</id>
+				<title>HU31-CA5: Admin puede editar plano de mesas</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU31, Restaurante</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Usuario ADMIN_NEGOCIO logueado</preconds>
+											<steps>1. Ir a /admin/plano
+2. Agregar una mesa nueva (número, capacidad, forma)
+3. Mover una mesa existente con drag-and-drop
+4. Eliminar una mesa
+5. Verificar que los cambios persisten</steps>
+											<expected>Operaciones CRUD se realizan correctamente en BD</expected>
+									</custom>
+								<is_converted>0</is_converted>
+			</case>
+							</cases>
+							</section>
+	</sections>
+			</suite>

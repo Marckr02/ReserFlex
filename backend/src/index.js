@@ -10,6 +10,7 @@ const serviceRoutes     = require('./routes/service.routes');
 const employeeRoutes    = require('./routes/employee.routes');
 const reservationRoutes = require('./routes/reservation.routes');
 const tableRoutes       = require('./routes/table.routes');
+const reviewRoutes      = require('./routes/review.routes');
 
 const app = express();
 
@@ -52,6 +53,7 @@ app.use('/api/services',     serviceRoutes);
 app.use('/api/employees',    employeeRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/tables', tableRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
