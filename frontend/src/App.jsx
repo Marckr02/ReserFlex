@@ -13,6 +13,7 @@ import Empleados from './pages/admin/Empleados'
 import ReservasAdmin from './pages/admin/ReservasAdmin'
 import Metricas from './pages/admin/Metricas'
 import PlanoRestaurante from './pages/admin/PlanoRestaurante'
+import Resenas from './pages/admin/Resenas'
 import Catalogo from './pages/cliente/Catalogo'
 import Reservar from './pages/cliente/Reservar'
 import MisReservas from './pages/cliente/MisReservas'
@@ -57,6 +58,7 @@ function App() {
           <Route path="/admin/empleados" element={<PrivateRoute roles={['ADMIN_NEGOCIO', 'SUPER_ADMIN']}><Empleados /></PrivateRoute>} />
           <Route path="/admin/reservas" element={<PrivateRoute roles={['ADMIN_NEGOCIO', 'SUPER_ADMIN']}><ReservasAdmin /></PrivateRoute>} />
           <Route path="/admin/metricas" element={<PrivateRoute roles={['ADMIN_NEGOCIO', 'SUPER_ADMIN']}><Metricas /></PrivateRoute>} />
+          <Route path="/admin/resenas" element={<PrivateRoute roles={['ADMIN_NEGOCIO', 'SUPER_ADMIN']}><Resenas /></PrivateRoute>} />
           <Route path="/admin/plano/:businessId?" element={<PrivateRoute roles={['ADMIN_NEGOCIO', 'SUPER_ADMIN']}><PlanoRestaurante /></PrivateRoute>} />
           <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="/admin/index" element={<Navigate to="/admin/dashboard" replace />} />

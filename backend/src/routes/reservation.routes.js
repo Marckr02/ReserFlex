@@ -14,5 +14,7 @@ router.patch('/:id/cancel',     authenticate,   ctrl.cancelReservation);        
 router.patch('/:id/reschedule', authenticate,   ctrl.rescheduleReservation);      // HU9
 router.patch('/:id/status',     authenticate, authorize('ADMIN_NEGOCIO','SUPER_ADMIN'), ctrl.updateReservationStatus); // HU12
 router.get('/metrics/:businessId', authenticate, authorize('ADMIN_NEGOCIO','SUPER_ADMIN'), ctrl.getMetrics); // HU13
+router.get('/export/:businessId',  authenticate, authorize('ADMIN_NEGOCIO','SUPER_ADMIN'), ctrl.exportReservations); // HU25
+router.get('/income/:businessId',  authenticate, authorize('ADMIN_NEGOCIO','SUPER_ADMIN'), ctrl.getIncomeReport); // HU26
 
 module.exports = router;

@@ -38,9 +38,11 @@ const CustomTooltip = ({ active, payload, label }) => {
 export default function Metricas() {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState(null);
+  const [income, setIncome] = useState(null);
   const [dailyData, setDailyData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [incomePeriod, setIncomePeriod] = useState('month');
 
   useEffect(() => {
     if (!user?.businessId) return;
@@ -48,6 +50,11 @@ export default function Metricas() {
       try {
         const { data } = await api.get(`/reservations/metrics/${user.businessId}`);
         setMetrics(data);
+
+        const incomeData = await api.get(`/reservations/income/${user.businessId}`, {
+          params: { period: incomePeriod }
+        });
+        setIncome(incomeData.data);
 
         const days = Array.from({ length: 7 }, (_, i) => {
           const d = new Date();
@@ -75,7 +82,7 @@ export default function Metricas() {
     };
 
     load();
-  }, [user]);
+  }, [user, incomePeriod]);
 
   if (loading) {
     return (
@@ -111,7 +118,7 @@ export default function Metricas() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
           <MetricCard
             label="Hoy"
             value={metrics?.today ?? 0}
@@ -152,6 +159,30 @@ export default function Metricas() {
               </svg>
             }
           />
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 hover:shadow-md hover:border-green-200 transition-all">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-500">Ingresos estimados</p>
+                <p className="text-3xl font-bold text-green-600 mt-1">
+                  ${income?.totalIncome?.toFixed(2) ?? '0.00'}
+                </p>
+                <select
+                  value={incomePeriod}
+                  onChange={(e) => setIncomePeriod(e.target.value)}
+                  className="mt-2 text-xs border border-slate-200 rounded-lg px-2 py-1"
+                >
+                  <option value="day">Hoy</option>
+                  <option value="week">Esta semana</option>
+                  <option value="month">Este mes</option>
+                </select>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-sm">
+                <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">

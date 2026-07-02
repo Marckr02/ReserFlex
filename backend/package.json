@@ -7,12 +7,15 @@
     "node": ">=24.0.0"
   },
   "prisma": {
-    "schema": "prisma/schema.prisma"
+    "schema": "prisma/schema.prisma",
+    "seed": "node prisma/seed.js"
   },
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "seed": "node prisma/seed.js",
+    "db:reset": "prisma migrate reset --force && npm run seed"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
@@ -23,7 +26,9 @@
     "express": "^4.21.1",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
-    "nodemailer": "^6.9.15"
+    "nodemailer": "^6.9.15",
+    "pdfkit": "^0.19.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.7",

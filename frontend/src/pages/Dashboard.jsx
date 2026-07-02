@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 import AdminNav from '../components/AdminNav'
+import OnboardingModal from '../components/OnboardingModal'
 
 const BUSINESS_TYPES = {
   SALON_BARBERIA: { label: 'Salón / Barbería', color: 'bg-amber-100 text-amber-700', icon: 'M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z' },
@@ -44,6 +45,7 @@ export default function Dashboard() {
   const [businesses, setBusinesses] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
   const [form, setForm] = useState({
     name: '',
     type: 'SALON_BARBERIA',
@@ -63,6 +65,22 @@ export default function Dashboard() {
       setLoading(false)
     }
   }, [user])
+
+  useEffect(() => {
+    if (user?.role === 'ADMIN_NEGOCIO') {
+      const hasSeenOnboarding = localStorage.getItem(`onboarding_seen_${user.businessId}`)
+      if (!hasSeenOnboarding) {
+        setShowOnboarding(true)
+      }
+    }
+  }, [user])
+
+  const handleOnboardingComplete = () => {
+    if (user?.businessId) {
+      localStorage.setItem(`onboarding_seen_${user.businessId}`, 'true')
+    }
+    setShowOnboarding(false)
+  }
 
   const fetchBusinesses = async () => {
     try {
@@ -488,6 +506,11 @@ export default function Dashboard() {
             </p>
           </div>
         </main>
+        <OnboardingModal
+          isOpen={showOnboarding}
+          onClose={() => setShowOnboarding(false)}
+          onComplete={handleOnboardingComplete}
+        />
       </div>
     )
   }
