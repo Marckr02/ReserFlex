@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import RestaurantFloorPlan from '../components/RestaurantFloorPlan';
 import api from '../services/api';
-import { getTheme } from '../utils/themeHelper';
+import { getTheme, isDarkTheme } from '../utils/themeHelper';
 
 const BUSINESS_TYPES = {
   SALON_BARBERIA: 'Salón / Barbería',
@@ -37,9 +37,8 @@ export default function BusinessPortal() {
     fetchBusiness();
   }, [slug]);
 
-  const theme = useMemo(() => {
-    return getTheme(business?.type);
-  }, [business]);
+  const theme = useMemo(() => getTheme(business?.type), [business]);
+  const dark = useMemo(() => isDarkTheme(business?.type), [business]);
 
   if (loading) {
     return (
@@ -93,37 +92,41 @@ export default function BusinessPortal() {
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className={`text-[10px] uppercase tracking-[0.3em] font-bold ${theme.accentText} mb-1`}>
-                    {BUSINESS_TYPES[business.type] || business.type}
-                  </p>
-                  <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight leading-none">
-                    {business.name}
-                  </h1>
-                  <div className="flex items-center gap-2 mt-3 text-sm text-slate-500 font-medium">
-                    <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span>{business.address}</span>
-                  </div>
-                </div>
+              <p className={`text-[10px] uppercase tracking-[0.3em] font-bold ${theme.accentText} mb-1`}>
+                {BUSINESS_TYPES[business.type] || business.type}
+              </p>
+              <h1 className={`text-3xl sm:text-4xl font-black tracking-tight leading-none ${dark ? 'text-slate-100' : 'text-slate-900'}`}>
+                {business.name}
+              </h1>
+              <div className={`flex items-center gap-2 mt-3 text-sm font-medium ${dark ? 'text-slate-300' : 'text-slate-500'}`}>
+                <svg className={`w-4 h-4 shrink-0 ${dark ? 'text-slate-400' : 'text-slate-400'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>{business.address}</span>
               </div>
+            </div>
+          </div>
 
-              {/* Action Buttons - left aligned below info */}
-              <div className="flex flex-wrap gap-3 mt-8">
-                <Link
-                  to={`/catalogo/${slug}`}
-                  className={`rounded-xl ${theme.button} px-6 py-3 font-bold tracking-wide transition shadow-sm hover:shadow text-sm`}
-                >
-                  Ver servicios
-                </Link>
-                <Link
-                  to={`/reservar/${slug}`}
-                  className={`rounded-xl border-2 border-slate-900 bg-transparent hover:bg-slate-900 hover:text-white text-slate-900 px-6 py-3 font-bold tracking-wide transition text-sm`}
-                >
-                  Reservar ahora
-                </Link>
-              </div>
+          {/* Action Buttons - left aligned below info */}
+          <div className="flex flex-wrap gap-3 mt-8">
+            <Link
+              to={`/catalogo/${slug}`}
+              className={`rounded-xl ${theme.button} px-6 py-3 font-bold tracking-wide transition shadow-sm hover:shadow text-sm`}
+            >
+              Ver servicios
+            </Link>
+            <Link
+              to={`/reservar/${slug}`}
+              className={`rounded-xl px-6 py-3 font-bold tracking-wide transition shadow-sm hover:shadow text-sm ${
+                dark
+                  ? 'border-2 border-slate-200 text-slate-100 hover:bg-slate-200/20'
+                  : 'border-2 border-slate-900 bg-transparent text-slate-900 hover:bg-slate-900 hover:text-white'
+              }`}
+            >
+              Reservar ahora
+            </Link>
+          </div>
             </div>
 
             {/* Vertical divider - desktop only */}
