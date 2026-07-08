@@ -1,3 +1,5 @@
+const DARK_THEMES = new Set(['SALON_BARBERIA', 'CANCHA_GIMNASIO']);
+
 export const BUSINESS_THEMES = {
   SALON_BARBERIA: {
     primaryBg: 'bg-zinc-900',
@@ -153,4 +155,8 @@ export const BUSINESS_THEMES = {
 
 export function getTheme(type) {
   return BUSINESS_THEMES[type] || BUSINESS_THEMES.GENERICO;
+}
+
+export function isDarkTheme(type) {
+  return DARK_THEMES.has(type);
 }

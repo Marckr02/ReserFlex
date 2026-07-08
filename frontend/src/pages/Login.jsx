@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
@@ -8,6 +8,63 @@ const ROLE_ROUTES = {
   ADMIN_NEGOCIO: '/admin/servicios',
   EMPLEADO: '/empleado/agenda',
   CLIENTE: '/mis-reservas'
+}
+
+const FEATURES = [
+  {
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+    title: 'Reservas inteligentes',
+    desc: 'Gestiona tu agenda de forma automática'
+  },
+  {
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>
+    ),
+    title: 'Equipo sincronizado',
+    desc: 'Coordina empleados y servicios en tiempo real'
+  },
+  {
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+    ),
+    title: 'Métricas claras',
+    desc: 'Visualiza el rendimiento de tu negocio'
+  }
+]
+
+function AnimatedCounter({ target, suffix = '' }) {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    let start = 0
+    const end = target
+    const duration = 2000
+    const increment = end / (duration / 16)
+
+    const timer = setInterval(() => {
+      start += increment
+      if (start >= end) {
+        setCount(end)
+        clearInterval(timer)
+      } else {
+        setCount(Math.floor(start))
+      }
+    }, 16)
+
+    return () => clearInterval(timer)
+  }, [target])
+
+  return (
+    <span>{count.toLocaleString()}{suffix}</span>
+  )
 }
 
 export default function Login() {
@@ -35,21 +92,123 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100 px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 shadow-lg shadow-blue-500/30 mb-4">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">ReserFlex</h1>
-          <p className="text-slate-500 mt-1">Sistema de gestión de reservas</p>
+    <div className="min-h-screen flex">
+      {/* Left Panel - Branding */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-[#1e3a5f] via-[#1e40af] to-[#4338ca]">
+        {/* Animated background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-20 left-20 w-72 h-72 border border-white/20 rounded-full animate-pulse"></div>
+          <div className="absolute top-40 right-10 w-96 h-96 border border-white/10 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+          <div className="absolute bottom-20 left-1/3 w-64 h-64 border border-white/15 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-xl shadow-blue-500/10 p-8 border border-slate-100/50">
-          <h2 className="text-xl font-bold text-slate-800 mb-6">Iniciar sesión</h2>
+        {/* Geometric shapes */}
+        <div className="absolute top-1/4 right-0 w-40 h-[500px] bg-gradient-to-b from-white/5 to-transparent skew-x-12"></div>
+        <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black/20 to-transparent"></div>
 
+        {/* Content */}
+        <div className="relative z-10 flex flex-col justify-between w-full p-12 xl:p-16">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center">
+              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white tracking-tight">ReserFlex</h1>
+              <p className="text-white/60 text-sm font-medium">Plataforma de reservas</p>
+            </div>
+          </div>
+
+          {/* Main message */}
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <h2 className="text-4xl xl:text-5xl font-black text-white leading-tight tracking-tight">
+                Tu negocio,<br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-white">siempre reservado</span>
+              </h2>
+              <p className="text-white/70 text-lg font-medium max-w-md leading-relaxed">
+                La plataforma completa para gestionar reservas, clientes y operaciones de tu negocio en un solo lugar.
+              </p>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-6">
+              <div className="space-y-1">
+                <div className="text-3xl xl:text-4xl font-black text-white">
+                  <AnimatedCounter target={2847} suffix="+" />
+                </div>
+                <div className="text-white/50 text-xs font-semibold uppercase tracking-wider">Negocios activos</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-3xl xl:text-4xl font-black text-white">
+                  <AnimatedCounter target={156} suffix="K" />
+                </div>
+                <div className="text-white/50 text-xs font-semibold uppercase tracking-wider">Reservas/mes</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-3xl xl:text-4xl font-black text-white">
+                  <AnimatedCounter target={99} suffix="%" />
+                </div>
+                <div className="text-white/50 text-xs font-semibold uppercase tracking-wider">Satisfacción</div>
+              </div>
+            </div>
+
+            {/* Features */}
+            <div className="space-y-3">
+              {FEATURES.map((feature, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white/80">
+                    {feature.icon}
+                  </div>
+                  <div>
+                    <h4 className="text-white font-semibold text-sm">{feature.title}</h4>
+                    <p className="text-white/50 text-xs">{feature.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="text-white/40 text-sm font-medium">
+            © 2024 ReserFlex. Todos los derechos reservados.
+          </div>
+        </div>
+      </div>
+
+      {/* Right Panel - Login Form */}
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-8 lg:p-12 bg-white relative overflow-hidden">
+        {/* Subtle background decoration */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-blue-50/50 to-transparent rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-indigo-50/30 to-transparent rounded-full blur-3xl"></div>
+
+        <div className="relative w-full max-w-md">
+          {/* Mobile logo */}
+          <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#1e3a5f] to-[#4338ca] flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-slate-800">ReserFlex</h1>
+              <p className="text-slate-500 text-xs">Sistema de reservas</p>
+            </div>
+          </div>
+
+          {/* Header */}
+          <div className="text-center lg:text-left mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              ¡Bienvenido de nuevo!
+            </h2>
+            <p className="text-slate-500 mt-2 font-medium">
+              Ingresa tus credenciales para acceder a tu cuenta
+            </p>
+          </div>
+
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
@@ -64,7 +223,7 @@ export default function Login() {
                 <input
                   type="email"
                   placeholder="tu@correo.com"
-                  className="w-full border border-slate-200 rounded-xl pl-12 pr-4 py-3.5 text-base sm:text-sm bg-slate-50/50 focus:bg-white transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full border border-slate-200 rounded-xl pl-12 pr-4 py-3.5 text-base sm:text-sm bg-slate-50/50 hover:bg-slate-50 focus:bg-white transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   required
@@ -85,7 +244,7 @@ export default function Login() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
-                  className="w-full border border-slate-200 rounded-xl pl-12 pr-12 py-3.5 text-base sm:text-sm bg-slate-50/50 focus:bg-white transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full border border-slate-200 rounded-xl pl-12 pr-12 py-3.5 text-base sm:text-sm bg-slate-50/50 hover:bg-slate-50 focus:bg-white transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   required
@@ -127,7 +286,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold text-base shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 active:scale-[0.98]"
+              className="w-full bg-gradient-to-r from-[#1e3a5f] to-[#4338ca] text-white py-3.5 rounded-xl hover:from-[#1e40af] hover:to-[#4f46e5] disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold text-base shadow-lg shadow-blue-900/20 hover:shadow-xl hover:shadow-blue-900/30 active:scale-[0.98]"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -141,13 +300,29 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-slate-100 text-center">
+          <div className="mt-8 pt-6 border-t border-slate-100 text-center">
             <p className="text-slate-600 text-sm">
               ¿No tienes cuenta?{' '}
               <Link to="/register" className="font-semibold text-blue-600 hover:text-blue-700 hover:underline">
                 Regístrate aquí
               </Link>
             </p>
+          </div>
+
+          {/* Mobile stats - visible only on mobile */}
+          <div className="lg:hidden mt-8 grid grid-cols-3 gap-4 p-4 bg-slate-50 rounded-2xl">
+            <div className="text-center">
+              <div className="text-2xl font-black text-slate-800">2,847+</div>
+              <div className="text-xs text-slate-500 font-medium">Negocios</div>
+            </div>
+            <div className="text-center border-x border-slate-200">
+              <div className="text-2xl font-black text-slate-800">156K</div>
+              <div className="text-xs text-slate-500 font-medium">Reservas/mes</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-black text-slate-800">99%</div>
+              <div className="text-xs text-slate-500 font-medium">Satisfacción</div>
+            </div>
           </div>
         </div>
       </div>
