@@ -43,10 +43,10 @@ export default function Profile() {
       return;
     }
 
-    if (user?.role === 'CLIENTE') {
-      navigate('/mis-reservas');
-      return;
-    }
+  if (user?.role === 'CLIENTE') {
+    navigate('/catalogo');
+    return;
+  }
 
     navigate('/admin/dashboard');
   };

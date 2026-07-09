@@ -19,14 +19,14 @@ export const BUSINESS_THEMES = {
     heroAccent: 'text-amber-400',
     cardBg: 'bg-white',
     cardBorder: 'border-zinc-200',
-    emptyStateBg: 'bg-zinc-50',
-    emptyStateText: 'text-zinc-600',
-    microcopy: {
-      emptyTitle: 'El silencio es oro, pero los servicios desaparecieron.',
-      emptyAction: 'Ajusta los filtros'
-    }
-  },
-  CONSULTORIO: {
+  emptyStateBg: 'bg-zinc-50',
+  emptyStateText: 'text-zinc-600',
+  microcopy: {
+    emptyTitle: 'El silencio es oro, pero los servicios desaparecieron.',
+    emptyAction: 'Ajusta los filtros'
+  }
+},
+CONSULTORIO: {
     primaryBg: 'bg-emerald-700',
     primaryText: 'text-emerald-700',
     hoverBg: 'hover:bg-emerald-800',
@@ -44,14 +44,14 @@ export const BUSINESS_THEMES = {
     heroAccent: 'text-emerald-600',
     cardBg: 'bg-white',
     cardBorder: 'border-slate-200',
-    emptyStateBg: 'bg-slate-50',
-    emptyStateText: 'text-slate-600',
-    microcopy: {
-      emptyTitle: 'No hay servicios que coincidan con tu búsqueda.',
-      emptyAction: 'Limpia los filtros'
-    }
-  },
-  RESTAURANTE: {
+  emptyStateBg: 'bg-slate-50',
+  emptyStateText: 'text-slate-600',
+  microcopy: {
+    emptyTitle: 'No hay servicios que coincidan con tu búsqueda.',
+    emptyAction: 'Limpia los filtros'
+  }
+},
+RESTAURANTE: {
     primaryBg: 'bg-rose-700',
     primaryText: 'text-rose-700',
     hoverBg: 'hover:bg-rose-800',
@@ -69,14 +69,14 @@ export const BUSINESS_THEMES = {
     heroAccent: 'text-orange-700',
     cardBg: 'bg-white',
     cardBorder: 'border-stone-200',
-    emptyStateBg: 'bg-amber-50/50',
-    emptyStateText: 'text-amber-700',
-    microcopy: {
-      emptyTitle: 'La carta está en otra mesa.',
-      emptyAction: 'Prueba con otros filtros'
-    }
-  },
-  HOTEL: {
+  emptyStateBg: 'bg-amber-50/50',
+  emptyStateText: 'text-amber-700',
+  microcopy: {
+    emptyTitle: 'La carta está en otra mesa.',
+    emptyAction: 'Prueba con otros filtros'
+  }
+},
+HOTEL: {
     primaryBg: 'bg-indigo-800',
     primaryText: 'text-indigo-800',
     hoverBg: 'hover:bg-indigo-900',
@@ -94,14 +94,14 @@ export const BUSINESS_THEMES = {
     heroAccent: 'text-indigo-700',
     cardBg: 'bg-white',
     cardBorder: 'border-slate-200',
-    emptyStateBg: 'bg-indigo-50/50',
-    emptyStateText: 'text-indigo-700',
-    microcopy: {
-      emptyTitle: 'No encontramos lo que buscas.',
-      emptyAction: 'Revisa los filtros'
-    }
-  },
-  CANCHA_GIMNASIO: {
+  emptyStateBg: 'bg-indigo-50/50',
+  emptyStateText: 'text-indigo-700',
+  microcopy: {
+    emptyTitle: 'No encontramos lo que buscas.',
+    emptyAction: 'Revisa los filtros'
+  }
+},
+CANCHA_GIMNASIO: {
     primaryBg: 'bg-zinc-800',
     primaryText: 'text-zinc-800',
     hoverBg: 'hover:bg-zinc-900',
@@ -119,14 +119,14 @@ export const BUSINESS_THEMES = {
     heroAccent: 'text-emerald-400',
     cardBg: 'bg-zinc-900',
     cardBorder: 'border-zinc-700',
-    emptyStateBg: 'bg-zinc-900',
-    emptyStateText: 'text-zinc-300',
-    microcopy: {
-      emptyTitle: 'Sin resultados. Ajusta los filtros.',
-      emptyAction: 'Limpiar búsqueda'
-    }
-  },
-  GENERICO: {
+  emptyStateBg: 'bg-zinc-900',
+  emptyStateText: 'text-zinc-300',
+  microcopy: {
+    emptyTitle: 'Sin resultados. Ajusta los filtros.',
+    emptyAction: 'Limpiar búsqueda'
+  }
+},
+GENERICO: {
     primaryBg: 'bg-slate-700',
     primaryText: 'text-slate-700',
     hoverBg: 'hover:bg-slate-800',

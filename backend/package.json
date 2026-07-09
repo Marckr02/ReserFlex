@@ -15,7 +15,8 @@
     "start": "node src/index.js",
     "postinstall": "prisma generate",
     "seed": "node prisma/seed.js",
-    "db:reset": "prisma migrate reset --force && npm run seed"
+    "db:reset": "prisma migrate reset --force && npm run seed",
+    "sonar:cloud": "sonar-scanner -Dsonar.token=%SONAR_TOKEN% -Dsonar.organization=%SONAR_ORG%"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

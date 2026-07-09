@@ -7,7 +7,7 @@ const ROLE_ROUTES = {
   SUPER_ADMIN: '/admin',
   ADMIN_NEGOCIO: '/admin/servicios',
   EMPLEADO: '/empleado/agenda',
-  CLIENTE: '/mis-reservas'
+  CLIENTE: '/catalogo'
 }
 
 const FEATURES = [
