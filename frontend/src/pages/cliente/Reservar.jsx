@@ -77,6 +77,7 @@ export default function Reservar() {
   const [confirmedReservation, setConfirmedReservation] = useState(null);
   const [form, setForm] = useState({ name: '', email: '', phone: '', notes: '', employeeId: '', guest: false });
   const minDate = new Date().toISOString().split('T')[0];
+const [showMobileCta, setShowMobileCta] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -103,8 +104,24 @@ export default function Reservar() {
     [services, serviceId]
   );
 
-  useEffect(() => {
-    const loadSlots = async () => {
+useEffect(() => {
+  const handleScroll = () => setShowMobileCta(window.scrollY > 320);
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  return () => window.removeEventListener('scroll', handleScroll);
+}, []);
+
+const todayStr = new Date().toISOString().split('T')[0];
+const slotCount = useMemo(() => {
+  return slots.reduce((acc, slot) => acc + (slot.available ? 1 : 0), 0);
+}, [slots]);
+const [previewDate, setPreviewDate] = useState(todayStr);
+
+useEffect(() => {
+  setPreviewDate(date || todayStr);
+}, [date, todayStr]);
+
+useEffect(() => {
+  const loadSlots = async () => {
       if (!business?.id || !serviceId || !date) return;
       try {
         const { data } = await api.get('/reservations/slots', {
@@ -190,9 +207,20 @@ export default function Reservar() {
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-indigo-50/50 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-10 left-10 w-80 h-80 bg-emerald-50/30 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="mx-auto max-w-5xl relative z-10">
-        
-        {/* Top business header banner */}
+<div className="mx-auto max-w-5xl relative z-10">
+
+{/* Breadcrumbs */}
+<nav className="mb-4">
+  <ol className="flex items-center gap-2 text-xs font-medium">
+    <li><Link to="/catalogo" className="text-stone-400 hover:text-stone-600 transition">Catálogo</Link></li>
+    <li className="text-stone-300">/</li>
+    <li><Link to={`/catalogo/${slug}`} className="text-stone-500 hover:text-stone-700 transition truncate max-w-[180px]">{business?.name}</Link></li>
+    <li className="text-stone-300">/</li>
+    <li className="text-slate-900 font-bold truncate">{selectedService?.name}</li>
+  </ol>
+</nav>
+
+{/* Top business header banner */}
         <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-200/80 mb-6 transition hover:shadow-md duration-300">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -223,22 +251,58 @@ export default function Reservar() {
           
           {/* Column 1: Configuration */}
           <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-200/80 space-y-5 transition hover:shadow-md duration-300">
+<div>
+  <label className="mb-2 block text-sm font-bold text-slate-700">Servicio</label>
+  <div className="grid grid-cols-1 gap-2 max-h-[320px] overflow-y-auto pr-1">
+    {services.map((service) => {
+      const active = serviceId === service.id;
+      return (
+        <button
+          key={service.id}
+          type="button"
+          onClick={() => setServiceId(service.id)}
+          className={`w-full text-left rounded-2xl border p-4 transition-all duration-200 ${
+            active
+              ? `${theme.softBg} ${theme.border} ring-1 ${theme.ring} shadow-sm`
+              : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
+          }`}
+        >
+          <div className="flex items-start justify-between gap-3">
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-700">Servicio seleccionado</label>
-              <div className="relative">
-                <select 
-                  className="w-full rounded-2xl border border-slate-200 px-3.5 py-3.5 text-base sm:text-sm bg-white font-medium text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200 transition" 
-                  value={serviceId} 
-                  onChange={(e) => setServiceId(e.target.value)}
-                >
-                  {services.map((service) => (
-                    <option key={service.id} value={service.id}>
-                      {service.name} · ${service.price} ({service.duration} min)
-                    </option>
-                  ))}
-                </select>
+              <p className={`text-sm font-bold ${active ? theme.primaryText : 'text-slate-900'}`}>{service.name}</p>
+              {service.description && (
+                <p className="mt-1 text-xs text-slate-500 line-clamp-1">{service.description}</p>
+              )}
+              <div className="mt-2 flex items-center gap-2 text-[11px] font-semibold text-slate-400">
+                <span className="flex items-center gap-1">
+                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {service.duration} min
+                </span>
+                {service.employeeServices?.length > 0 && (
+                  <>
+                    <span className="text-slate-300">·</span>
+                    <span className="flex items-center gap-1">
+                      <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      {service.employeeServices.length}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
+            <div className="text-right shrink-0">
+              <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Desde</p>
+              <p className={`text-lg font-black ${active ? theme.primaryText : 'text-slate-900'}`}>${service.price}</p>
+            </div>
+          </div>
+        </button>
+      );
+    })}
+  </div>
+</div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
@@ -440,8 +504,28 @@ export default function Reservar() {
                 Confirmar reserva
               </button>
             </div>
-          </div>
-        </form>
+</div>
+
+{showMobileCta && (
+  <div className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-white/90 backdrop-blur-md border-t border-slate-200 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+    <div className="flex items-center justify-between gap-3 max-w-5xl mx-auto">
+      <div className="min-w-0">
+        <p className="text-xs font-bold text-slate-900 truncate">{selectedService?.name}</p>
+        <p className="text-[10px] text-slate-500 font-medium">
+          {selectedSlot ? `${selectedSlot.startTime} · $${selectedService?.price}` : 'Selecciona un horario'}
+        </p>
+      </div>
+      <button
+        type="submit"
+        disabled={!selectedSlot}
+        className={`shrink-0 rounded-xl ${theme.button} px-5 py-2.5 text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed transition`}
+      >
+        Confirmar
+      </button>
+    </div>
+  </div>
+)}
+</form>
       </div>
     </div>
   );

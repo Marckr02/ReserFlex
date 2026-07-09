@@ -89,6 +89,20 @@ const getAllBusinesses = async (req, res) => {
   }
 };
 
+const getPublicBusinesses = async (req, res) => {
+  try {
+    const businesses = await prisma.business.findMany({
+      where: { active: true },
+      select: { id: true, name: true, slug: true, type: true, address: true },
+      orderBy: { name: 'asc' }
+    });
+    res.json(businesses);
+  } catch (error) {
+    console.error('Error en getPublicBusinesses:', error);
+    res.status(500).json({ message: 'Error en el servidor' });
+  }
+};
+
 const getBusinessBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
@@ -187,4 +201,4 @@ const checkSlug = async (req, res) => {
   }
 };
 
-module.exports = { createBusiness, getAllBusinesses, getBusinessBySlug, toggleBusiness, checkSlug, getBusinessPhotos, uploadBusinessPhotos };
+module.exports = { createBusiness, getAllBusinesses, getPublicBusinesses, getBusinessBySlug, toggleBusiness, checkSlug, getBusinessPhotos, uploadBusinessPhotos };

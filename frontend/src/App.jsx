@@ -4,7 +4,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import VerifyEmail from './pages/VerifyEmail'
 import ForgotPassword from './pages/ForgotPassword'
-import ResetPassword  from './pages/ResetPassword'
+import ResetPassword from './pages/ResetPassword'
 import Dashboard from './pages/Dashboard'
 import BusinessPortal from './pages/BusinessPortal'
 import Horarios from './pages/admin/Horarios'
@@ -45,7 +45,8 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/verify" element={<VerifyEmail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password"  element={<ResetPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/catalogo" element={<Catalogo />} />
           <Route path="/catalogo/:slug" element={<Catalogo />} />
           <Route path="/reservar/:slug" element={<Reservar />} />
           <Route path="/mis-reservas" element={<PrivateRoute roles={['CLIENTE']}><MisReservas /></PrivateRoute>} />

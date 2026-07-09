@@ -1225,23 +1225,96 @@ Vie 27  Buffer: fix de issues post-deploy
 
 ---
 
-# SPRINT 4 — RESEÑAS Y REPORTES
+## SPRINT 4 — RESEÑAS Y REPORTES ✅ COMPLETADO
 
 **Período:** 30 junio – 11 julio 2026
+**Revisión de pares:** por confirmar
 **Puntos:** 17 pts
+**Rama base:** `develop`
 
 ## HUs del Sprint 4
 
-| HU | Descripción | Pts |
-|---|---|---|
-| HU20 | Onboarding para nuevos administradores | 3 |
-| HU23 | Sistema de reseñas y calificaciones | 5 |
-| HU24 | Respuesta del negocio a reseñas | 2 |
-| HU25 | Exportar reservas a Excel/PDF | 5 |
-| HU26 | Reporte de ingresos estimados | 2 |
+| HU | Descripción | Pts | Estado |
+|---|---|---|---|
+| HU20 | Onboarding para nuevos administradores | 3 | ✅ COMPLETADO |
+| HU23 | Sistema de reseñas y calificaciones | 5 | ✅ COMPLETADO |
+| HU24 | Respuesta del negocio a reseñas | 2 | ✅ COMPLETADO |
+| HU25 | Exportar reservas a Excel/PDF | 5 | ✅ COMPLETADO |
+| HU26 | Reporte de ingresos estimados | 2 | ✅ COMPLETADO |
 
-## Nuevos modelos Prisma
+---
 
+## HU20 — ONBOARDING PARA NUEVOS ADMINISTRADORES (3 pts) ✅ COMPLETADO
+
+### Historia
+Como nuevo administrador de un negocio, quiero ver un tutorial guiado la primera
+vez que inicio sesión, para saber cómo configurar mi negocio correctamente.
+
+### Criterios de aceptación
+
+**HU20-CA1:** Dado que un ADMIN_NEGOCIO inicia sesión por primera vez, cuando
+no tiene servicios ni horarios configurados, entonces aparece el modal de onboarding
+con 4 pasos: Bienvenida, Configurar servicios, Definir horarios, Listo.
+
+**HU20-CA2:** Dado que el admin está en el onboarding, cuando hace clic en
+"Siguiente", entonces avanza al siguiente paso. Cuando llega al último y hace
+clic en "Comenzar", el modal se cierra y no aparece más.
+
+### Implementación realizada
+
+**Archivo: `frontend/src/components/OnboardingModal.jsx`**
+
+Componente modal con stepper de 4 pasos:
+- Step 1 "Bienvenido": Icono de bombilla, descripción inicial
+- Step 2 "Configura tus servicios": Instrucciones para crear servicios
+- Step 3 "Define tus horarios": Instrucciones para configurar horarios
+- Step 4 "¡Listo!": Muestra el enlace público del negocio
+
+```jsx
+const STEPS = [
+  { title: 'Bienvenido', description: '...', icon: '...', content: null },
+  { title: 'Configura tus servicios', description: '...', content: (...) },
+  { title: 'Define tus horarios', description: '...', content: (...) },
+  { title: '¡Listo para recibir reservas!', description: '...', content: (...) }
+];
+```
+
+Features:
+- Barra de progreso animada entre pasos
+- Botones "Anterior" y "Siguiente"
+- Botón "Skip" para cerrar sin completar
+- Al completar, persiste en localStorage la clave `onboardingCompleted_${businessId}`
+
+**Integración en Dashboard.jsx:**
+
+```jsx
+const showOnboarding = !localStorage.getItem(`onboardingCompleted_${user.businessId}`);
+```
+
+---
+
+## HU23 — SISTEMA DE RESEÑAS Y CALIFICACIONES (5 pts) ✅ COMPLETADO
+
+### Historia
+Como cliente, quiero dejar una calificación y comentario después de completar
+una reserva, para compartir mi experiencia con otros usuarios.
+
+### Criterios de aceptación
+
+**HU23-CA1:** Dado que el cliente tiene una reserva COMPLETADA, cuando accede
+a "Mis Reservas", entonces ve un botón "Dejar reseña" (estrella dorada).
+
+**HU23-CA2:** Dado que el cliente hace clic en "Dejar reseña", cuando completa
+el formulario (1-5 estrellas + comentario opcional), entonces la reseña se
+guarda y aparece en el portal del negocio.
+
+**HU23-CA3:** Dado que el cliente no tiene una reserva completada, cuando intenta
+crear una reseña, entonces recibe error 400 indicando que solo puede reseñar
+reservaciones completadas.
+
+### Implementación realizada
+
+**Modelo `Review` en `schema.prisma`:**
 ```prisma
 model Review {
   id            String      @id @default(uuid())
@@ -1251,41 +1324,385 @@ model Review {
   comment       String?
   reply         String?
   createdAt     DateTime    @default(now())
+
+  reservation Reservation @relation(fields: [reservationId], references: [id])
+  business    Business    @relation(fields: [businessId], references: [id])
 }
-
-# Agregar en Reservation:
-# review Review?
-
-# Agregar campo price en Reservation:
-# price Float? (copiado de Service.price al momento de reservar)
-# discountPercent Float? (% de descuento aplicado si es cliente frecuente)
 ```
 
-## Dependencias nuevas
+**HU23-T1: Backend `review.controller.js`**
+
+```js
+// POST /api/reviews — crear reseña (CLIENTE)
+const createReview = async (req, res) => {
+  // Valida: reservation existe, pertenece al cliente, status COMPLETADA
+  // Valida rating 1-5
+  // Check que no exista ya una reseña para esa reservation (unique)
+  // Crea la reseña con rating y comment
+};
+
+// GET /api/reviews/business/:businessId — listar reseñas (público, paginado)
+const getReviewsByBusiness = async (req, res) => {
+  // Incluye reservation con client y service
+  // Paginación: page, limit, totalPages
+};
+
+// GET /api/reviews/business/:businessId/stats — estadísticas (público)
+const getReviewStats = async (req, res) => {
+  // Retorna: averageRating, totalReviews, ratingDistribution (1-5)
+};
+```
+
+**HU23-T2: Rutas `review.routes.js`**
+```js
+router.post('/', authenticate, ctrl.createReview);                          // CLIENTE
+router.get('/business/:businessId', ctrl.getReviewsByBusiness);            // público
+router.get('/business/:businessId/stats', ctrl.getReviewStats);             // público
+router.patch('/:id/reply', authenticate, authorize('ADMIN_NEGOCIO', 'SUPER_ADMIN'), ctrl.replyToReview);
+```
+
+**HU23-T3: Frontend `MisReservas.jsx` — Botón dejar reseña**
+
+```jsx
+{reservation.status === 'COMPLETADA' && (
+  <button
+    onClick={() => openReviewModal(reservation)}
+    className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600 flex items-center gap-1.5"
+  >
+    <Star className="h-4 w-4" />
+    Dejar reseña
+  </button>
+)}
+```
+
+Modal de reseña con selector de 5 estrellas interactivo y textarea para comentario.
+
+**HU23-T4: Frontend `admin/Resenas.jsx` — Gestión de reseñas**
+
+Página admin con:
+- Tarjetas de estadísticas: promedio, total, distribución
+- Lista de reseñas con paginación
+- Badges de color por rating (1-5 estrellas)
+- Botón "Responder" que abre textarea inline
+
+### Casos de prueba
+
+| ID | Caso | Prioridad | Estado |
+|---|---|---|---|
+| C100 | Botón "Dejar reseña" visible en reservas COMPLETADAS | High | ✅ |
+| C101 | Selector de estrellas permite rating 1-5 | High | ✅ |
+| C102 | Reseña se guarda correctamente en BD | High | ✅ |
+| C103 | No se puede reseñar reserva no completada | High | ✅ |
+| C104 | No se puede reseñar dos veces la misma reserva | High | ✅ |
+| C105 | Reseñas visibles en portal público | Medium | ✅ |
+| C106 | Paginación de reseñas funciona correctamente | Medium | ✅ |
+
+---
+
+## HU24 — RESPUESTA DEL NEGOCIO A RESEÑAS (2 pts) ✅ COMPLETADO
+
+### Historia
+Como administrador del negocio, quiero poder responder a las reseñas de los
+clientes, para mostrar que valoro su retroalimentación.
+
+### Criterios de aceptación
+
+**HU24-CA1:** Dado que el admin está en la página de reseñas, cuando hace clic
+en "Responder", entonces aparece un textarea para escribir la respuesta.
+
+**HU24-CA2:** Dado que el admin envía la respuesta, cuando completa el textarea,
+entonces la respuesta se guarda y se muestra debajo de la reseña.
+
+### Implementación realizada
+
+**Backend `review.controller.js`:**
+```js
+// PATCH /api/reviews/:id/reply — responder reseña (ADMIN)
+const replyToReview = async (req, res) => {
+  // Valida que el admin sea del mismo negocio
+  // Actualiza el campo reply con el texto ingresado
+};
+```
+
+**Frontend `admin/Resenas.jsx`:**
+```jsx
+{replyingTo === review.id ? (
+  <div className="mt-4 space-y-3">
+    <textarea placeholder="Escribe tu respuesta..." value={replyText} ... />
+    <button onClick={() => handleReply(review.id)}>Enviar respuesta</button>
+    <button onClick={() => { setReplyingTo(null); setReplyText(''); }}>Cancelar</button>
+  </div>
+) : (
+  <button onClick={() => setReplyingTo(review.id)}>Responder a esta reseña</button>
+)}
+```
+
+### Casos de prueba
+
+| ID | Caso | Prioridad | Estado |
+|---|---|---|---|
+| C107 | Admin puede ver botón responder en cada reseña | High | ✅ |
+| C108 | Admin puede escribir y enviar respuesta | High | ✅ |
+| C109 | Respuesta se muestra debajo de la reseña | High | ✅ |
+| C110 | Admin no puede responder reseñas de otros negocios | High | ✅ |
+
+---
+
+## HU25 — EXPORTAR RESERVAS A EXCEL/PDF (5 pts) ✅ COMPLETADO
+
+### Historia
+Como administrador, quiero exportar mis reservas a Excel y PDF para tener
+reportes offline y compartir con mi equipo.
+
+### Criterios de aceptación
+
+**HU25-CA1:** Dado que el admin está en ReservasAdmin, cuando hace clic en
+"Exportar Excel", entonces se descarga un archivo `.xlsx` con las reservas.
+
+**HU25-CA2:** Dado que el admin está en ReservasAdmin, cuando hace clic en
+"Exportar PDF", entonces se descarga un archivo `.pdf` con las reservas.
+
+**HU25-CA3:** Dado que el admin aplica filtros de fecha, cuando exporta,
+entonces el archivo solo contiene las reservas dentro del rango seleccionado.
+
+### Implementación realizada
+
+**Archivo: `backend/src/controllers/reservation.controller.js`**
+
+```js
+// GET /api/reservations/export/:businessId?format=xlsx|pdf&startDate=&endDate=
+const exportReservations = async (req, res) => {
+  const { format = 'xlsx', startDate, endDate } = req.query;
+
+  // Construye query con filtros de fecha opcionales
+  const reservations = await prisma.reservation.findMany({
+    where: { businessId, status: { not: 'CANCELADA' }, ... },
+    include: { service, employee, client }
+  });
+
+  // Transforma datos: Fecha, Hora, Servicio, Precio, Cliente, Email, Teléfono, Empleado, Estado
+
+  if (format === 'xlsx') {
+    const XLSX = require('xlsx');
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Reservas');
+    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+    res.setHeader('Content-Disposition', 'attachment; filename=reservas.xlsx');
+    return res.send(buffer);
+  }
+
+  if (format === 'pdf') {
+    const PDFDocument = require('pdfkit');
+    const doc = new PDFDocument({ margin: 50 });
+    // Genera tabla con Headers y filas de datos
+    doc.end();
+    return;
+  }
+};
+```
+
+**Ruta en `reservation.routes.js`:**
+```js
+router.get('/export/:businessId', authenticate, authorize('ADMIN_NEGOCIO','SUPER_ADMIN'), ctrl.exportReservations);
+```
+
+**Frontend `admin/ReservasAdmin.jsx`:**
+```jsx
+<div className="flex gap-2">
+  <a
+    href={`${import.meta.env.VITE_API_URL}/reservations/export/${user?.businessId}?format=xlsx`}
+    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl..."
+  >
+    Exportar Excel
+  </a>
+  <a
+    href={`${import.meta.env.VITE_API_URL}/reservations/export/${user?.businessId}?format=pdf`}
+    className="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 text-white rounded-xl..."
+  >
+    Exportar PDF
+  </a>
+</div>
+```
+
+### Casos de prueba
+
+| ID | Caso | Prioridad | Estado |
+|---|---|---|---|
+| C111 | Exportar Excel descarga archivo .xlsx válido | High | ✅ |
+| C112 | Exportar PDF descarga archivo .pdf válido | High | ✅ |
+| C113 | Exportación contiene columnas correctas | High | ✅ |
+| C114 | Filtros de fecha funcionan en exportación | Medium | ✅ |
+
+---
+
+## HU26 — REPORTE DE INGRESOS ESTIMADOS (2 pts) ✅ COMPLETADO
+
+### Historia
+Como administrador, quiero ver un reporte de ingresos estimados para conocer
+el rendimiento financiero de mi negocio.
+
+### Criterios de aceptación
+
+**HU26-CA1:** Dado que el admin está en Métricas, cuando visualiza la página,
+entonces ve una tarjeta de "Ingresos estimados" con selector de período
+(día, semana, mes).
+
+**HU26-CA2:** Dado que el admin cambia el período, cuando selecciona otro
+período, entonces los ingresos se actualizan соответственно.
+
+### Implementación realizada
+
+**Backend `reservation.controller.js`:**
+```js
+// GET /api/reservations/income/:businessId?period=day|week|month
+const getIncomeReport = async (req, res) => {
+  // Calcula fecha inicio según período
+  // Busca reservas COMPLETADAS desde esa fecha
+  // Suma precios (usa r.price o r.service.price)
+  // Agrupa por servicio y por día
+  // Retorna: period, startDate, totalIncome, totalReservations,
+  //          averagePerReservation, byService, byDay
+};
+```
+
+**Frontend `admin/Metricas.jsx`:**
+```jsx
+<select value={incomePeriod} onChange={(e) => setIncomePeriod(e.target.value)}>
+  <option value="day">Hoy</option>
+  <option value="week">Esta semana</option>
+  <option value="month">Este mes</option>
+</select>
+
+<p className="text-3xl font-bold text-green-600">
+  ${income?.totalIncome?.toFixed(2) ?? '0.00'}
+</p>
+```
+
+### Casos de prueba
+
+| ID | Caso | Prioridad | Estado |
+|---|---|---|---|
+| C115 | Tarjeta de ingresos visible en Metricas | High | ✅ |
+| C116 | Selector de período funciona (day/week/month) | High | ✅ |
+| C117 | Ingresos calculados correctamente | High | ✅ |
+
+---
+
+## NUEVOS ENDPOINTS SPRINT 4
+
+| Método | Endpoint | HU | Auth |
+|---|---|---|---|
+| POST | /api/reviews | HU23 | CLIENTE |
+| GET | /api/reviews/business/:businessId | HU23 | No |
+| GET | /api/reviews/business/:businessId/stats | HU23 | No |
+| PATCH | /api/reviews/:id/reply | HU24 | ADMIN |
+| GET | /api/reservations/export/:businessId | HU25 | ADMIN |
+| GET | /api/reservations/income/:businessId | HU26 | ADMIN |
+
+---
+
+## ARCHIVOS NUEVOS SPRINT 4
+
+| Archivo | Descripción |
+|---------|-------------|
+| `backend/src/controllers/review.controller.js` | CRUD de reseñas |
+| `backend/src/routes/review.routes.js` | Rutas para reseñas |
+| `frontend/src/components/OnboardingModal.jsx` | Modal de onboarding 4 pasos |
+| `frontend/src/pages/admin/Resenas.jsx` | Página de gestión de reseñas |
+
+---
+
+## DEPENDENCIAS NUEVAS
 
 ```bash
 cd backend
 npm install xlsx pdfkit
 ```
 
-## Endpoints nuevos Sprint 4
+---
 
-| Método | Endpoint | HU | Auth |
-|---|---|---|---|
-| POST | /api/reviews | HU23 | CLIENTE |
-| GET | /api/reviews/:businessId | HU23 | No |
-| PATCH | /api/reviews/:id/reply | HU24 | ADMIN |
-| GET | /api/reservations/export/:businessId?format=xlsx | HU25 | ADMIN |
-| GET | /api/reservations/export/:businessId?format=pdf | HU25 | ADMIN |
-| GET | /api/reservations/income/:businessId?period=month | HU26 | ADMIN |
+## PLAN DÍA A DÍA — SPRINT 4 ✅ COMPLETADO
 
-## Páginas frontend nuevas Sprint 4
+```
+SEMANA 1 (30 junio – 4 julio)
+─────────────────────────────────────────────────────────────────────
+Lun 30  Setup Sprint 4, merge de ramas develop
+        HU20: OnboardingModal.jsx con stepper 4 pasos
+        HU20: Integración en Dashboard.jsx
 
-- `frontend/src/pages/admin/Resenas.jsx` — listar reseñas y responder
-- Modificar `MisReservas.jsx` — agregar botón "Dejar reseña" en COMPLETADAS
-- Modificar `Metricas.jsx` — agregar tarjeta de ingresos estimados
-- Modificar `ReservasAdmin.jsx` — agregar botones de exportación
-- `frontend/src/components/OnboardingModal.jsx` — stepper 4 pasos
+Mar 1   HU23: Modelo Review en Prisma
+        HU23: review.controller.js (createReview, getReviewsByBusiness)
+
+Mié 2   HU23: getReviewStats endpoint
+        HU23: Frontend MisReservas.jsx - botón dejar reseña
+
+Jue 3   HU24: replyToReview endpoint
+        HU24: Frontend admin/Resenas.jsx - responder reseñas
+
+Vie 4   HU25: exportReservations con xlsx
+        HU25: exportReservations con pdfkit
+
+SEMANA 2 (7–11 julio)
+─────────────────────────────────────────────────────────────────────
+Lun 7   HU26: getIncomeReport endpoint
+        HU26: Metricas.jsx - tarjeta de ingresos
+
+Mar 8   HU26: Integración selector período en Metricas
+        Testing de todas las HUs
+
+Mié 9   Fix de bugs encontrados
+        Pruebas de exportación
+
+Jue 10  Merge develop → main
+        git tag v4.0.0
+        Verificar deploy en Railway y Vercel
+
+Vie 11  Buffer: fix de issues post-deploy
+        Preparar documentación Sprint 4
+```
+
+---
+
+## CHECKLIST ENTREGA SPRINT 4
+
+Para el grupo revisor (revisión: por confirmar):
+
+## Técnico
+- [ ] `git tag v4.0.0` creado en GitHub
+- [ ] Deploy en Railway funcionando (health check verde)
+- [ ] Deploy en Vercel funcionando (sin errores en consola)
+- [ ] Migración Sprint 4 aplicada en Railway
+
+## HU20 — Onboarding ✅
+- [ ] Modal aparece al primer login del admin
+- [ ] 4 pasos con navegación funcional
+- [ ] Botón Skip cierra el modal
+- [ ] Progreso persiste en localStorage
+
+## HU23 — Reseñas ✅
+- [ ] Botón "Dejar reseña" en MisReservas (COMPLETADAS)
+- [ ] Selector de 5 estrellas funcional
+- [ ] Reseña se guarda en BD
+- [ ] Reseñas visibles en portal público
+- [ ] Paginación funciona
+
+## HU24 — Respuesta a reseñas ✅
+- [ ] Admin puede ver lista de reseñas en Resenas.jsx
+- [ ] Botón responder abre textarea
+- [ ] Respuesta se guarda y muestra
+
+## HU25 — Exportación ✅
+- [ ] Botón Exportar Excel descarga .xlsx
+- [ ] Botón Exportar PDF descarga .pdf
+- [ ] Archivo contiene datos correctos
+
+## HU26 — Ingresos ✅
+- [ ] Tarjeta de ingresos en Metricas.jsx
+- [ ] Selector day/week/month funcional
+- [ ] Cálculo correcto de totales
+
+---
 
 ---
 

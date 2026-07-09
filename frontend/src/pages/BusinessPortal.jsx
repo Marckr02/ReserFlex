@@ -17,6 +17,7 @@ export default function BusinessPortal() {
   const { slug } = useParams();
   const [business, setBusiness] = useState(null);
   const [photos, setPhotos] = useState([]);
+  const [reviewStats, setReviewStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -25,15 +26,18 @@ export default function BusinessPortal() {
       try {
         const { data } = await api.get(`/business/slug/${slug}`);
         setBusiness(data);
-        const photosRes = await api.get(`/business/${data.id}/photos`);
+        const [photosRes, reviewsRes] = await Promise.all([
+          api.get(`/business/${data.id}/photos`),
+          api.get(`/reviews/business/${data.id}/stats`).catch(() => ({ data: null })),
+        ]);
         setPhotos(photosRes.data);
+        setReviewStats(reviewsRes.data);
       } catch (err) {
         setError(err.response?.data?.message || 'Negocio no encontrado');
       } finally {
         setLoading(false);
       }
     };
-
     fetchBusiness();
   }, [slug]);
 
@@ -42,7 +46,7 @@ export default function BusinessPortal() {
 
   if (loading) {
     return (
-      <div className={`min-h-screen ${theme.heroBg} flex items-center justify-center`}>
+      <div className={`min-h-screen ${theme?.heroBg || 'bg-stone-50'} flex items-center justify-center`}>
         <div className="text-center space-y-3">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-slate-400 mx-auto"></div>
           <p className="text-slate-500 text-sm font-medium">Cargando...</p>
@@ -69,21 +73,26 @@ export default function BusinessPortal() {
 
   return (
     <div className={`min-h-screen ${theme.heroBg} pb-16`}>
+      {/* Breadcrumb */}
+      <div className="mx-auto max-w-5xl px-4 pt-6">
+        <nav>
+          <ol className="flex items-center gap-2 text-xs font-medium">
+            <li><Link to="/catalogo" className="text-stone-400 hover:text-stone-600 transition">Catálogo</Link></li>
+            <li className="text-stone-300">/</li>
+            <li className="text-slate-900 font-bold truncate">{business?.name}</li>
+          </ol>
+        </nav>
+      </div>
 
       {/* Editorial Hero */}
       <div className={`${theme.heroBg} border-b border-slate-200/60`}>
         <div className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
           <div className="flex flex-col lg:flex-row lg:items-start lg:gap-12 gap-8">
-
             {/* Left: Logo + Name + Type */}
             <div className="flex-1 min-w-0">
               <div className="flex items-start gap-4">
                 {business.logoUrl ? (
-                  <img
-                    src={business.logoUrl}
-                    alt={business.name}
-                    className="w-14 h-14 rounded-xl object-cover shadow-sm border border-slate-200/80 shrink-0"
-                  />
+                  <img src={business.logoUrl} alt={business.name} className="w-14 h-14 rounded-xl object-cover shadow-sm border border-slate-200/80 shrink-0" />
                 ) : (
                   <div className={`w-14 h-14 rounded-xl ${theme.softBg} flex items-center justify-center shrink-0`}>
                     <span className={`text-2xl font-black ${theme.primaryText}`}>
@@ -92,41 +101,58 @@ export default function BusinessPortal() {
                   </div>
                 )}
                 <div className="min-w-0">
-              <p className={`text-[10px] uppercase tracking-[0.3em] font-bold ${theme.accentText} mb-1`}>
-                {BUSINESS_TYPES[business.type] || business.type}
-              </p>
-              <h1 className={`text-3xl sm:text-4xl font-black tracking-tight leading-none ${dark ? 'text-slate-100' : 'text-slate-900'}`}>
-                {business.name}
-              </h1>
-              <div className={`flex items-center gap-2 mt-3 text-sm font-medium ${dark ? 'text-slate-300' : 'text-slate-500'}`}>
-                <svg className={`w-4 h-4 shrink-0 ${dark ? 'text-slate-400' : 'text-slate-400'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span>{business.address}</span>
-              </div>
-            </div>
-          </div>
+                  <p className={`text-[10px] uppercase tracking-[0.3em] font-bold ${theme.accentText} mb-1`}>
+                    {BUSINESS_TYPES[business.type] || business.type}
+                  </p>
+                  <h1 className={`text-3xl sm:text-4xl font-black tracking-tight leading-none ${dark ? 'text-slate-100' : 'text-slate-900'}`}>
+                    {business.name}
+                  </h1>
+                  <div className={`flex items-center gap-2 mt-3 text-sm font-medium ${dark ? 'text-slate-300' : 'text-slate-500'}`}>
+                    <svg className={`w-4 h-4 shrink-0 ${dark ? 'text-slate-400' : 'text-slate-400'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>{business.address}</span>
+                  </div>
 
-          {/* Action Buttons - left aligned below info */}
-          <div className="flex flex-wrap gap-3 mt-8">
-            <Link
-              to={`/catalogo/${slug}`}
-              className={`rounded-xl ${theme.button} px-6 py-3 font-bold tracking-wide transition shadow-sm hover:shadow text-sm`}
-            >
-              Ver servicios
-            </Link>
-            <Link
-              to={`/reservar/${slug}`}
-              className={`rounded-xl px-6 py-3 font-bold tracking-wide transition shadow-sm hover:shadow text-sm ${
-                dark
-                  ? 'border-2 border-slate-200 text-slate-100 hover:bg-slate-200/20'
-                  : 'border-2 border-slate-900 bg-transparent text-slate-900 hover:bg-slate-900 hover:text-white'
-              }`}
-            >
-              Reservar ahora
-            </Link>
-          </div>
+                  {reviewStats && reviewStats.totalReviews > 0 && (
+                    <div className={`flex items-center gap-2 mt-3 text-sm ${dark ? 'text-slate-200' : 'text-stone-600'}`}>
+                      <div className="flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <svg
+                            key={star}
+                            className={`h-4 w-4 ${star <= Math.round(reviewStats.averageRating) ? 'text-amber-400 fill-amber-400' : 'text-stone-300'}`}
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                          </svg>
+                        ))}
+                      </div>
+                      <span className="font-bold text-xs">{reviewStats.averageRating.toFixed(1)}</span>
+                      <span className="text-xs opacity-80">({reviewStats.totalReviews} reseña{reviewStats.totalReviews !== 1 ? 's' : ''})</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-3 mt-8">
+                <Link
+                  to={`/catalogo/${slug}`}
+                  className={`rounded-xl ${theme.button} px-6 py-3 font-bold tracking-wide transition shadow-sm hover:shadow text-sm`}
+                >
+                  Ver servicios
+                </Link>
+                <Link
+                  to={`/reservar/${slug}`}
+                  className={`rounded-xl px-6 py-3 font-bold tracking-wide transition shadow-sm hover:shadow text-sm ${dark ? 'border-2 border-slate-200 text-slate-100 hover:bg-slate-200/20' : 'border-2 border-slate-900 bg-transparent text-slate-900 hover:bg-slate-900 hover:text-white'}`}
+                >
+                  Reservar ahora
+                </Link>
+              </div>
             </div>
 
             {/* Vertical divider - desktop only */}
@@ -140,7 +166,6 @@ export default function BusinessPortal() {
                   Consulta horarios disponibles para cada servicio en el catálogo.
                 </p>
               </div>
-
               {business.type === 'RESTAURANTE' && (
                 <div className="rounded-2xl bg-white/80 backdrop-blur-sm border border-slate-200/60 p-5 shadow-sm">
                   <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Reservación de mesa</h2>
@@ -156,7 +181,6 @@ export default function BusinessPortal() {
 
       {/* Main Content */}
       <div className="mx-auto max-w-5xl px-4 py-10 space-y-10">
-
         {/* Table reservation for Restaurant tenants */}
         {business.type === 'RESTAURANTE' && (
           <div className="rounded-3xl bg-white border border-slate-200/80 p-6 shadow-sm">
@@ -181,16 +205,12 @@ export default function BusinessPortal() {
               {photos.slice(0, 6).map((photo, i) => (
                 <div
                   key={photo.id}
-                  className={`overflow-hidden rounded-2xl border border-slate-200/60 shadow-xs group transition-all duration-300 hover:shadow-md ${
-                    i === 0 && photos.length > 1 ? 'sm:col-span-2 sm:row-span-2' : ''
-                  }`}
+                  className={`overflow-hidden rounded-2xl border border-slate-200/60 shadow-xs group transition-all duration-300 hover:shadow-md ${i === 0 && photos.length > 1 ? 'sm:col-span-2 sm:row-span-2' : ''}`}
                 >
                   <img
                     src={photo.url}
                     alt={photo.caption || business.name}
-                    className={`w-full object-cover transition-transform duration-500 group-hover:scale-105 ${
-                      i === 0 && photos.length > 1 ? 'h-64 sm:h-full' : 'h-36'
-                    }`}
+                    className={`w-full object-cover transition-transform duration-500 group-hover:scale-105 ${i === 0 && photos.length > 1 ? 'h-64 sm:h-full' : 'h-36'}`}
                   />
                 </div>
               ))}

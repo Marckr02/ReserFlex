@@ -10,6 +10,14 @@ const STATUS_COLORS = {
   NO_SE_PRESENTO: 'bg-gray-100 text-gray-700',
 };
 
+function FadeUp({ children, delay = 0 }) {
+  return (
+    <div style={{ animation: `fadeUp 0.4s ease-out ${delay}ms both` }}>
+      {children}
+    </div>
+  );
+}
+
 export default function MisReservas() {
   const { user } = useAuth();
   const [reservations, setReservations] = useState([]);
@@ -35,8 +43,8 @@ export default function MisReservas() {
       const { data } = await api.get('/reservations/my', {
         params: {
           ...(statusFilter ? { status: statusFilter } : {}),
-          ...(businessFilter ? { businessId: businessFilter } : {})
-        }
+          ...(businessFilter ? { businessId: businessFilter } : {}),
+        },
       });
       setReservations(data);
       setError('');
@@ -80,15 +88,14 @@ export default function MisReservas() {
             businessId: selectedReservation.business.id,
             serviceId: selectedReservation.service.id,
             employeeId: selectedReservation.employee?.id || undefined,
-            date: rescheduleDate
-          }
+            date: rescheduleDate,
+          },
         });
         setRescheduleSlots(data.slots || []);
       } catch (err) {
-        setError(err.response?.data?.message || 'No se pudieron cargar los slots de reprogramación');
+        setError(err.response?.data?.message || 'No se pudieron cargar los slots');
       }
     };
-
     loadSlots();
   }, [showReschedule, selectedReservation, rescheduleDate]);
 
@@ -98,13 +105,12 @@ export default function MisReservas() {
       setError('Selecciona un horario para reprogramar');
       return;
     }
-
     setRescheduling(true);
     setError('');
     setMessage('');
     try {
       await api.patch(`/reservations/${selectedReservation.id}/reschedule`, {
-        startTime: `${rescheduleDate}T${selectedSlot.startTime}:00`
+        startTime: `${rescheduleDate}T${selectedSlot.startTime}:00`,
       });
       setMessage('Reserva reprogramada correctamente');
       setShowReschedule(false);
@@ -125,7 +131,7 @@ export default function MisReservas() {
       await api.post('/reviews', {
         reservationId: reviewReservation.id,
         rating,
-        comment
+        comment,
       });
       setMessage('¡Gracias por tu reseña!');
       setShowReviewModal(false);
@@ -156,6 +162,7 @@ export default function MisReservas() {
 
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-10">
+      <style>{`@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }`}</style>
       <div className="mx-auto max-w-5xl">
         <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 p-8 text-white shadow-xl">
           <p className="text-sm uppercase tracking-[0.3em] text-blue-200">Cliente</p>
@@ -193,64 +200,112 @@ export default function MisReservas() {
           </div>
         </div>
 
-        {message && <p className="mt-6 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</p>}
-        {error && <p className="mt-4 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p>}
+        {message && (
+          <div className="mt-6 rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-emerald-800 text-sm font-semibold flex items-start gap-2.5">
+            <svg className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span>{message}</span>
+          </div>
+        )}
+        {error && (
+          <div className="mt-4 rounded-2xl bg-rose-50 border border-rose-200 p-4 text-rose-800 text-sm font-semibold flex items-start gap-2.5">
+            <svg className="h-5 w-5 text-rose-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <span>{error}</span>
+          </div>
+        )}
+
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <FadeUp delay={0}>
+            <Link
+              to="/catalogo"
+              className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 p-5 text-white shadow-sm hover:shadow-md transition"
+            >
+              <p className="text-xs uppercase tracking-[0.25em] text-blue-200 font-bold">Explorar</p>
+              <p className="mt-1.5 text-lg font-black">Ver negocios</p>
+              <p className="mt-1 text-xs text-white/70">Reserva en cualquier negocio disponible</p>
+              <span className="mt-4 inline-flex items-center text-xs font-semibold text-white/80">Ir al catálogo →</span>
+            </Link>
+          </FadeUp>
+
+          {(() => {
+            const recent = [...reservations].sort((a, b) => new Date(b.startTime) - new Date(a.startTime))[0];
+            if (!recent) return null;
+            const recentSlug = recent.business?.slug;
+            if (!recentSlug) return null;
+            return (
+              <FadeUp delay={80}>
+                <Link
+                  to={`/catalogo/${recentSlug}`}
+                  className="rounded-3xl bg-white p-5 shadow-sm border border-slate-200 hover:border-slate-300 transition"
+                >
+                  <p className="text-xs uppercase tracking-[0.25em] text-slate-400 font-bold">Reciente</p>
+                  <p className="mt-1.5 text-lg font-black text-slate-900">{recent.business?.name}</p>
+                  <p className="mt-1 text-xs text-slate-500">Reservar de nuevo en tu último negocio</p>
+                  <span className="mt-4 inline-flex items-center text-xs font-semibold text-blue-600">Ir al negocio →</span>
+                </Link>
+              </FadeUp>
+            );
+          })()}
+        </div>
 
         <div className="mt-6 grid gap-4">
           {reservations.length === 0 ? (
-            <div className="rounded-3xl bg-white p-8 text-center text-slate-500 shadow-sm border border-slate-200">
-              No tienes reservas registradas.
-            </div>
+            <FadeUp delay={120}>
+              <div className="rounded-3xl bg-white p-8 text-center text-slate-500 shadow-sm border border-slate-200">
+                No tienes reservas registradas.
+              </div>
+            </FadeUp>
           ) : (
-            reservations.map((reservation) => (
-              <div key={reservation.id} className="rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
-                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                  <div>
-                    <h2 className="text-xl font-bold text-slate-900">{reservation.service?.name}</h2>
-                    <p className="mt-1 text-sm text-slate-600">{reservation.business?.name}</p>
-                    <p className="mt-1 text-sm text-slate-600">
-                      {new Date(reservation.startTime).toLocaleString('es-EC', {
-                        dateStyle: 'medium',
-                        timeStyle: 'short'
-                      })}
-                    </p>
-                    <p className={`mt-2 inline-flex rounded-full px-3 py-1 text-sm ${STATUS_COLORS[reservation.status] || 'bg-slate-100 text-slate-700'}`}>
-                      {reservation.status}
-                    </p>
-                  </div>
+            reservations.map((reservation, idx) => (
+              <FadeUp key={reservation.id} delay={idx * 60}>
+                <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-900">{reservation.service?.name}</h2>
+                      <p className="mt-1 text-sm text-slate-600">{reservation.business?.name}</p>
+                      <p className="mt-1 text-sm text-slate-600">
+                        {new Date(reservation.startTime).toLocaleString('es-EC', { dateStyle: 'medium', timeStyle: 'short' })}
+                      </p>
+                      <p className={`mt-2 inline-flex rounded-full px-3 py-1 text-sm ${STATUS_COLORS[reservation.status] || 'bg-slate-100 text-slate-700'}`}>
+                        {reservation.status}
+                      </p>
+                    </div>
 
-                  <div className="flex flex-col gap-2 md:items-end">
-                    {reservation.status !== 'CANCELADA' && (
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          onClick={() => openRescheduleModal(reservation)}
-                          className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-                        >
-                          Reprogramar
-                        </button>
-                        <button
-                          onClick={() => handleCancel(reservation.id)}
-                          className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
-                        >
-                          Cancelar
-                        </button>
-                        {reservation.status === 'COMPLETADA' && (
+                    <div className="flex flex-col gap-2 md:items-end">
+                      {reservation.status !== 'CANCELADA' && (
+                        <div className="flex flex-wrap gap-2">
                           <button
-                            onClick={() => openReviewModal(reservation)}
-                            className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600 flex items-center gap-1.5"
+                            onClick={() => openRescheduleModal(reservation)}
+                            className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
                           >
-                            <Star className="h-4 w-4" />
-                            Dejar reseña
+                            Reprogramar
                           </button>
-                        )}
-                      </div>
-                    )}
-                    {reservation.employee?.name && (
-                      <p className="text-sm text-slate-500">Empleado: {reservation.employee.name}</p>
-                    )}
+                          <button
+                            onClick={() => handleCancel(reservation.id)}
+                            className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
+                          >
+                            Cancelar
+                          </button>
+                          {reservation.status === 'COMPLETADA' && (
+                            <button
+                              onClick={() => openReviewModal(reservation)}
+                              className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600 flex items-center gap-1.5"
+                            >
+                              <Star className="h-4 w-4" /> Dejar reseña
+                            </button>
+                          )}
+                        </div>
+                      )}
+                      {reservation.employee?.name && (
+                        <p className="text-sm text-slate-500">Empleado: {reservation.employee.name}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              </FadeUp>
             ))
           )}
         </div>
@@ -270,10 +325,7 @@ export default function MisReservas() {
                   min={new Date().toISOString().split('T')[0]}
                   className="w-full rounded-xl border border-slate-300 px-3 py-2"
                   value={rescheduleDate}
-                  onChange={(e) => {
-                    setRescheduleDate(e.target.value);
-                    setSelectedSlot(null);
-                  }}
+                  onChange={(e) => { setRescheduleDate(e.target.value); setSelectedSlot(null); }}
                   required
                 />
               </div>
@@ -287,7 +339,13 @@ export default function MisReservas() {
                       type="button"
                       disabled={!slot.available}
                       onClick={() => slot.available && setSelectedSlot(slot)}
-                      className={`rounded-lg border px-2 py-2 text-xs font-medium ${!slot.available ? 'bg-gray-100 text-gray-400' : selectedSlot?.startTime === slot.startTime ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'}`}
+                      className={`rounded-lg border px-2 py-2 text-xs font-medium ${
+                        !slot.available
+                          ? 'bg-gray-100 text-gray-400'
+                          : selectedSlot?.startTime === slot.startTime
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
+                      }`}
                     >
                       {slot.startTime}
                     </button>
@@ -327,15 +385,8 @@ export default function MisReservas() {
                 <label className="mb-3 block text-sm font-semibold text-slate-700">¿Cómo fue tu experiencia?</label>
                 <div className="flex gap-2 justify-center">
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => setRating(star)}
-                      className="transition-transform hover:scale-110"
-                    >
-                      <Star
-                        className={`h-10 w-10 ${star <= rating ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`}
-                      />
+                    <button key={star} type="button" onClick={() => setRating(star)} className="transition-transform hover:scale-110">
+                      <Star className={`h-10 w-10 ${star <= rating ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} />
                     </button>
                   ))}
                 </div>
@@ -359,9 +410,7 @@ export default function MisReservas() {
                 />
               </div>
 
-              {error && (
-                <p className="text-sm text-red-600 bg-red-50 p-3 rounded-xl">{error}</p>
-              )}
+              {error && <p className="text-sm text-red-600 bg-red-50 p-3 rounded-xl">{error}</p>}
 
               <div className="flex gap-3">
                 <button
