@@ -104,14 +104,12 @@ export default function Catalogo() {
         if (isDirectory) {
           const { data } = await api.get('/business/public');
           setBusinesses(data);
-        } else {
-          const [businessRes, servicesRes] = await Promise.all([
-            api.get(`/business/slug/${slug}`),
-            api.get(`/services/${slug}`),
-          ]);
-          setBusiness(businessRes.data);
-          setServices(servicesRes.data || []);
-        }
+      } else {
+        const businessRes = await api.get(`/business/slug/${slug}`);
+        setBusiness(businessRes.data);
+        const servicesRes = await api.get(`/services/${businessRes.data.id}`);
+        setServices(servicesRes.data || []);
+      }
       } catch (err) {
         setError(err.response?.data?.message || 'No se pudo cargar');
       } finally {
