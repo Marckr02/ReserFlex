@@ -192,7 +192,7 @@ export default function ReservasAdmin() {
           </div>
           <div className="flex flex-wrap gap-2">
             <a
-              href={`${import.meta.env.VITE_API_URL || '/api'}/reservations/export/${user?.businessId}?format=xlsx`}
+              href={`/api/reservations/export/${user?.businessId}?format=xlsx`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2.5 rounded-xl hover:bg-emerald-700 transition-all font-semibold text-sm"
@@ -203,7 +203,7 @@ export default function ReservasAdmin() {
               Exportar Excel
             </a>
             <a
-              href={`${import.meta.env.VITE_API_URL || '/api'}/reservations/export/${user?.businessId}?format=pdf`}
+              href={`/api/reservations/export/${user?.businessId}?format=pdf`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2.5 rounded-xl hover:bg-red-700 transition-all font-semibold text-sm"

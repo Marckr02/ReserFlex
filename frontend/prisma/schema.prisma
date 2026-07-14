@@ -1,0 +1,203 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN_NEGOCIO
+  EMPLEADO
+  CLIENTE
+}
+
+enum BusinessType {
+  SALON_BARBERIA
+  CONSULTORIO
+  RESTAURANTE
+  HOTEL
+  CANCHA_GIMNASIO
+  GENERICO
+}
+
+enum ReservationStatus {
+  PENDIENTE
+  COMPLETADA
+  CANCELADA
+  NO_SE_PRESENTO
+}
+
+// ── Modelos existentes (NO modificar) ─────────────────────────────────────────
+
+model User {
+  id           String    @id @default(uuid())
+  name         String
+  email        String    @unique
+  password     String
+  role         Role      @default(CLIENTE)
+  verified     Boolean   @default(false)
+  verifyToken  String?
+  resetToken   String?
+  resetExpires DateTime?
+  createdAt    DateTime  @default(now())
+
+  business     Business? @relation("AdminBusiness", fields: [businessId], references: [id])
+  businessId   String?
+
+  // Nuevas relaciones
+  employeeServices EmployeeService[]
+  reservations     Reservation[]     @relation("ClientReservations")
+  employeeReservations Reservation[] @relation("EmployeeReservations")
+}
+
+model Business {
+  id        String       @id @default(uuid())
+  name      String
+  slug      String       @unique
+  type      BusinessType
+  address   String
+  logoUrl   String?
+  active    Boolean      @default(true)
+  createdAt DateTime     @default(now())
+
+  admin     User[]       @relation("AdminBusiness")
+
+  // Nuevas relaciones
+  schedules   Schedule[]
+  services    Service[]
+  reservations Reservation[]
+  tables      RestaurantTable[]
+  photos      BusinessPhoto[]
+  reviews     Review[]
+}
+
+// ── Modelos nuevos Sprint 2 ───────────────────────────────────────────────────
+
+model Schedule {
+  id         String   @id @default(uuid())
+  businessId String
+  dayOfWeek  Int      // 0=Domingo, 1=Lunes ... 6=Sabado
+  startTime  String   // "09:00"
+  endTime    String   // "18:00"
+  isActive   Boolean  @default(true)
+
+  business   Business @relation(fields: [businessId], references: [id])
+
+  @@unique([businessId, dayOfWeek])
+}
+
+model Service {
+  id          String  @id @default(uuid())
+  businessId  String
+  name        String
+  description String?
+  price       Float
+  duration    Int     // minutos
+  active      Boolean @default(true)
+  createdAt   DateTime @default(now())
+
+  business         Business          @relation(fields: [businessId], references: [id])
+  employeeServices EmployeeService[]
+  reservations     Reservation[]
+}
+
+model EmployeeService {
+  id         String  @id @default(uuid())
+  employeeId String
+  serviceId  String
+
+  employee   User    @relation(fields: [employeeId], references: [id])
+  service    Service @relation(fields: [serviceId], references: [id])
+
+  @@unique([employeeId, serviceId])
+}
+
+model Reservation {
+  id           String            @id @default(uuid())
+  businessId   String
+  serviceId    String
+  clientId     String?           // null si reserva sin cuenta (HU8)
+  employeeId   String?
+  status       ReservationStatus @default(PENDIENTE)
+  startTime    DateTime
+  endTime      DateTime
+  notes        String?
+  // Campos para reserva sin cuenta (HU8)
+  guestName    String?
+  guestEmail   String?
+  guestPhone   String?
+  accessCode   String?           // codigo de 6 digitos para gestionar sin cuenta
+  // Campos Sprint 4
+  price           Float?         // copiado de Service.price al momento de reservar
+  discountPercent Float?         // % de descuento aplicado si es cliente frecuente
+  createdAt    DateTime          @default(now())
+
+  business     Business @relation(fields: [businessId], references: [id])
+  service      Service  @relation(fields: [serviceId], references: [id])
+  client       User?    @relation("ClientReservations", fields: [clientId], references: [id])
+  employee     User?    @relation("EmployeeReservations", fields: [employeeId], references: [id])
+  review       Review?
+}
+
+model RestaurantTable {
+  id         String   @id @default(uuid())
+  businessId String
+  number     Int
+  capacity   Int
+  posX       Float    @default(0)
+  posY       Float    @default(0)
+  shape      String   @default("round")
+  active     Boolean  @default(true)
+
+  business          Business           @relation(fields: [businessId], references: [id])
+  tableReservations TableReservation[]
+
+  @@unique([businessId, number])
+}
+
+model TableReservation {
+  id         String            @id @default(uuid())
+  tableId    String
+  businessId String
+  date       String
+  time       String
+  guests     Int
+  occasion   String?
+  status     ReservationStatus @default(PENDIENTE)
+  clientId   String?
+  guestName  String?
+  guestEmail String?
+  guestPhone String?
+  accessCode String?
+  createdAt  DateTime          @default(now())
+
+  table      RestaurantTable @relation(fields: [tableId], references: [id])
+}
+
+model BusinessPhoto {
+  id         String   @id @default(uuid())
+  businessId String
+  url        String
+  caption    String?
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  business   Business @relation(fields: [businessId], references: [id])
+}
+
+// ── Modelos Sprint 4 ───────────────────────────────────────────────────────────
+
+model Review {
+  id            String      @id @default(uuid())
+  reservationId String      @unique
+  businessId    String
+  rating        Int         // 1-5
+  comment       String?
+  reply         String?
+  createdAt     DateTime    @default(now())
+
+  reservation Reservation @relation(fields: [reservationId], references: [id])
+  business    Business    @relation(fields: [businessId], references: [id])
+}
