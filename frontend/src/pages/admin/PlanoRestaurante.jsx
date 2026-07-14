@@ -10,7 +10,6 @@ export default function PlanoRestaurante() {
   const planRef = useRef(null);
   const businessId = businessIdParam || user?.businessId;
   const [tables, setTables] = useState([]);
-  const [photos, setPhotos] = useState([]);
   const [newTable, setNewTable] = useState({ number: '', capacity: 2, shape: 'round' });
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
@@ -19,12 +18,8 @@ export default function PlanoRestaurante() {
     if (!businessId) return;
     setLoading(true);
     try {
-      const [tablesRes, photosRes] = await Promise.all([
-        api.get(`/tables/${businessId}`),
-        api.get(`/business/${businessId}/photos`)
-      ]);
-      setTables(tablesRes.data);
-      setPhotos(photosRes.data);
+      const { data } = await api.get(`/tables/${businessId}`);
+      setTables(data);
     } catch {
       setMessage('No se pudo cargar el plano');
     } finally {
@@ -59,16 +54,6 @@ export default function PlanoRestaurante() {
     setTables((current) => current.map((table) => (table.id === tableId ? { ...table, posX, posY } : table)));
   };
 
-  const handlePhotoUpload = async (event) => {
-    const formData = new FormData();
-    Array.from(event.target.files || []).forEach((file) => formData.append('photos', file));
-    const { data } = await api.post(`/business/${businessId}/photos`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-    setPhotos((current) => [...current, ...data]);
-    setMessage('Fotos subidas correctamente');
-  };
-
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
   }
@@ -80,21 +65,40 @@ export default function PlanoRestaurante() {
         <div className="mb-6 rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-blue-950 p-8 text-white">
           <p className="text-sm uppercase tracking-[0.3em] text-blue-200">Restaurante</p>
           <h1 className="mt-2 text-3xl font-bold">Editor de plano</h1>
-          <p className="mt-2 text-white/75">Agrega mesas, cambia su posición y sube fotos del local.</p>
+          <p className="mt-2 text-white/75">Agrega mesas y cambia su posición arrastrando.</p>
         </div>
 
         {message && <p className="mb-4 rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-700">{message}</p>}
 
         <div className="mb-6 rounded-3xl bg-white p-4 shadow-sm border border-slate-200">
           <div className="flex flex-wrap gap-3">
-            <input type="number" placeholder="Nº mesa" value={newTable.number} onChange={(e) => setNewTable({ ...newTable, number: e.target.value })} className="w-24 rounded-xl border border-slate-300 px-3 py-2 text-base sm:text-sm" />
-            <input type="number" placeholder="Capacidad" value={newTable.capacity} onChange={(e) => setNewTable({ ...newTable, capacity: parseInt(e.target.value, 10) })} className="w-28 rounded-xl border border-slate-300 px-3 py-2 text-base sm:text-sm" />
-            <select value={newTable.shape} onChange={(e) => setNewTable({ ...newTable, shape: e.target.value })} className="rounded-xl border border-slate-300 px-3 py-2 text-base sm:text-sm">
+            <input
+              type="number"
+              placeholder="Nº mesa"
+              value={newTable.number}
+              onChange={(e) => setNewTable({ ...newTable, number: e.target.value })}
+              className="w-24 rounded-xl border border-slate-300 px-3 py-2 text-base sm:text-sm"
+            />
+            <input
+              type="number"
+              placeholder="Capacidad"
+              value={newTable.capacity}
+              onChange={(e) => setNewTable({ ...newTable, capacity: parseInt(e.target.value, 10) })}
+              className="w-28 rounded-xl border border-slate-300 px-3 py-2 text-base sm:text-sm"
+            />
+            <select
+              value={newTable.shape}
+              onChange={(e) => setNewTable({ ...newTable, shape: e.target.value })}
+              className="rounded-xl border border-slate-300 px-3 py-2 text-base sm:text-sm"
+            >
               <option value="round">Redonda</option>
               <option value="square">Cuadrada</option>
               <option value="rectangle">Rectangular</option>
             </select>
-            <button onClick={handleAddTable} className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+            <button
+              onClick={handleAddTable}
+              className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            >
               + Agregar mesa
             </button>
           </div>
@@ -118,20 +122,13 @@ export default function PlanoRestaurante() {
               >
                 <span className="text-xs font-bold">M{table.number}</span>
                 <span className="text-[11px] text-slate-500">👥 {table.capacity}</span>
-                <span onClick={() => handleDeleteTable(table.id)} className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                <span
+                  onClick={() => handleDeleteTable(table.id)}
+                  className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white"
+                >
                   ×
                 </span>
               </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-6 rounded-3xl bg-white p-4 shadow-sm border border-slate-200">
-          <h2 className="mb-3 text-lg font-semibold text-slate-800">Fotos del restaurante</h2>
-          <input type="file" accept="image/*" multiple onChange={handlePhotoUpload} className="mb-4 text-sm" />
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-            {photos.map((photo) => (
-              <img key={photo.id} src={photo.url} alt={photo.caption || 'Foto del restaurante'} className="h-28 w-full rounded-2xl object-cover" />
             ))}
           </div>
         </div>

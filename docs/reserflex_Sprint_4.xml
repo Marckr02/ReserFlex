@@ -1,0 +1,489 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suite>
+	<id>S7</id>
+	<name>Master</name>
+	<description></description>
+	<sections>
+		<section>
+		<name>HU20 - Onboarding</name>
+		<description></description>
+						<cases>
+												<case>
+				<id>C100</id>
+				<title>HU20-CA1: Modal de onboarding aparece al primer login</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU20, Onboarding</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>ADMIN_NEGOCIO logueado por primera vez sin servicios ni horarios configurados</preconds>
+											<steps>1. Iniciar sesión como ADMIN_NEGOCIO
+2. Verificar que aparece el modal de onboarding
+3. Verificar que muestra 4 pasos: Bienvenida, Configurar servicios, Definir horarios, Listo</steps>
+											<expected>Modal de onboarding visible con los 4 pasos</expected>
+									</custom>
+								<is_converted>1</is_converted>
+			</case>
+															<case>
+				<id>C101</id>
+				<title>HU20-CA2: Navegación entre pasos del onboarding</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU20, Onboarding</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Modal de onboarding abierto</preconds>
+											<steps>1. Hacer clic en "Siguiente"
+2. Verificar que avanza al paso 2
+3. Hacer clic en "Anterior"
+4. Verificar que vuelve al paso 1
+5. Navegar hasta el último paso
+6. Hacer clic en "Comenzar"
+7. Verificar que el modal se cierra</steps>
+											<expected>Modal avanza y retrocede entre pasos, se cierra al completar</expected>
+									</custom>
+								<is_converted>1</is_converted>
+			</case>
+															<case>
+				<id>C102</id>
+				<title>HU20-CA3: Botón Skip cierra el modal</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>Medium</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU20, Onboarding</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Modal de onboarding abierto en cualquier paso</preconds>
+											<steps>1. Hacer clic en botón "Skip" (X)
+2. Verificar que el modal se cierra</steps>
+											<expected>Modal se cierra sin completar el onboarding</expected>
+									</custom>
+								<is_converted>1</is_converted>
+			</case>
+															<case>
+				<id>C103</id>
+				<title>HU20-CA4: Onboarding no aparece después de completar</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>Medium</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU20, Onboarding</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Usuario que ya completó el onboarding</preconds>
+											<steps>1. Cerrar sesión y volver a iniciar
+2. Verificar que el modal de onboarding NO aparece</steps>
+											<expected>Modal no aparece al tener onboarding completado en localStorage</expected>
+									</custom>
+								<is_converted>1</is_converted>
+			</case>
+								</cases>
+							</section>
+			<section>
+		<name>HU23 - Sistema de Reseñas</name>
+		<description></description>
+						<cases>
+												<case>
+				<id>C104</id>
+				<title>HU23-CA1: Botón 'Dejar reseña' en reservas completadas</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU23, Reviews</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Cliente logueado con al menos una reserva COMPLETADA</preconds>
+											<steps>1. Ir a Mis Reservas
+2. Verificar que en la reserva COMPLETADA aparece botón "Dejar reseña" con icono de estrella
+3. Verificar que NO aparece en reservas PENDIENTE o CANCELADA</steps>
+											<expected>Botón "Dejar reseña" visible solo en reservas completadas</expected>
+									</custom>
+								<is_converted>1</is_converted>
+			</case>
+															<case>
+				<id>C105</id>
+				<title>HU23-CA2: Selector de estrellas funciona (1-5)</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU23, Reviews</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Cliente en modal de dejar reseña</preconds>
+											<steps>1. Hacer clic en cada estrella (1, 2, 3, 4, 5)
+2. Verificar que la estrella clicada y las anteriores se iluminan
+3. Verificar que la etiqueta de rating cambia (Muy malo, Malo, Regular, Bueno, Excelente)</steps>
+											<expected>Selector de 5 estrellas permite rating 1-5 con feedback visual</expected>
+									</custom>
+								<is_converted>1</is_converted>
+			</case>
+															<case>
+				<id>C106</id>
+				<title>HU23-CA3: Reseña se guarda correctamente</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU23, Reviews</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Cliente con reserva COMPLETADA sin reseñar</preconds>
+											<steps>1. Clic en "Dejar reseña"
+2. Seleccionar 4 estrellas
+3. Escribir comentario "Buen servicio"
+4. Clic en "Enviar reseña"
+5. Verificar mensaje de confirmación
+6. Verificar que el botón "Dejar reseña" ya no aparece para esa reserva</steps>
+											<expected>Reseña guardada en BD, aparece en portal público</expected>
+									</custom>
+								<is_converted>1</is_converted>
+			</case>
+															<case>
+				<id>C107</id>
+				<title>HU23-CA4: Error al reseñar reserva no completada</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU23, Reviews</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Cliente intentando reseñar mediante API directamente</preconds>
+											<steps>1. Enviar POST /api/reviews con reservationId de reserva PENDIENTE
+2. Verificar que retorna error 400
+3. Verificar mensaje: "Solo puedes reseñar reservaciones completadas"</steps>
+											<expected>Error 400 indicando que solo se pueden reseñar reservas completadas</expected>
+									</custom>
+								<is_converted>1</is_converted>
+			</case>
+															<case>
+				<id>C108</id>
+				<title>HU23-CA5: No se puede reseñar dos veces la misma reserva</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU23, Reviews</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Cliente con una reserva ya reseñada</preconds>
+											<steps>1. Intentar crear otra reseña para la misma reservationId
+2. Verificar que retorna error 409
+3. Verificar mensaje: "Ya existe una reseña para esta reservación"</steps>
+											<expected>Error 409 indicando que la reseña ya existe</expected>
+									</custom>
+								<is_converted>1</is_converted>
+			</case>
+															<case>
+				<id>C109</id>
+				<title>HU23-CA6: Reseñas visibles en portal público</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>Medium</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU23, Reviews</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Negocios con reseñas creadas</preconds>
+											<steps>1. Acceder al portal /reservas/:slug
+2. Verificar que las reseñas se muestran en la sección correspondiente
+3. Verificar que se muestra el rating promedio y distribución</steps>
+											<expected>Reseñas visibles públicamente en el portal del negocio</expected>
+									</custom>
+								<is_converted>1</is_converted>
+			</case>
+															<case>
+				<id>C110</id>
+				<title>HU23-CA7: Paginación de reseñas</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>Medium</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU23, Reviews</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>Negocios con más de 10 reseñas</preconds>
+											<steps>1. Llamar GET /api/reviews/business/:businessId?page=1&limit=10
+2. Verificar que retorna máximo 10 reseñas
+3. Llamar con page=2
+4. Verificar que retorna las siguientes reseñas
+5. Verificar que pagination contiene total, totalPages</steps>
+											<expected>Paginación funciona correctamente con page y limit</expected>
+									</custom>
+								<is_converted>1</is_converted>
+			</case>
+								</cases>
+							</section>
+			<section>
+		<name>HU24 - Respuesta a Reseñas</name>
+		<description></description>
+						<cases>
+												<case>
+				<id>C111</id>
+				<title>HU24-CA1: Admin puede ver botón responder en reseñas</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU24, Reviews</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>ADMIN_NEGOCIO logueado con reseñas en su negocio</preconds>
+											<steps>1. Ir a /admin/resenas
+2. Verificar que ve la lista de reseñas
+3. Verificar que cada reseña sin respuesta tiene botón "Responder a esta reseña"</steps>
+											<expected>Botón "Responder" visible para reseñas sin respuesta</expected>
+									</custom>
+								<is_converted>1</is_converted>
+			</case>
+															<case>
+				<id>C112</id>
+				<title>HU24-CA2: Admin puede escribir y enviar respuesta</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU24, Reviews</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>ADMIN_NEGOCIO en página de reseñas</preconds>
+											<steps>1. Clic en "Responder a esta reseña"
+2. Verificar que aparece textarea
+3. Escribir "Gracias por su comentario"
+4. Clic en "Enviar respuesta"
+5. Verificar que la respuesta se guarda</steps>
+											<expected>Respuesta guardada y visible debajo de la reseña</expected>
+									</custom>
+								<is_converted>1</is_converted>
+			</case>
+															<case>
+				<id>C113</id>
+				<title>HU24-CA3: Admin no puede responder reseñas de otros negocios</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU24, Reviews</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>ADMIN_NEGOCIO intentando responder reseña de otro negocio</preconds>
+											<steps>1. Enviar PATCH /api/reviews/:id/reply con review de otro businessId
+2. Verificar que retorna error 403
+3. Verificar mensaje: "No tienes permiso para responder a esta reseña"</steps>
+											<expected>Error 403 al intentar responder reseña de otro negocio</expected>
+									</custom>
+								<is_converted>1</is_converted>
+			</case>
+								</cases>
+							</section>
+			<section>
+		<name>HU25 - Exportar Reservas</name>
+		<description></description>
+						<cases>
+												<case>
+				<id>C114</id>
+				<title>HU25-CA1: Exportar Excel descarga archivo .xlsx</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU25, Export</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>ADMIN_NEGOCIO logueado con reservas en su negocio</preconds>
+											<steps>1. Ir a /admin/reservas
+2. Hacer clic en botón "Exportar Excel"
+3. Verificar que se descarga archivo .xlsx
+4. Abrir el archivo y verificar columnas: Fecha, Hora, Servicio, Precio, Cliente, Email</steps>
+											<expected>Archivo .xlsx descargado con datos correctos de reservas</expected>
+									</custom>
+								<is_converted>1</is_converted>
+			</case>
+															<case>
+				<id>C115</id>
+				<title>HU25-CA2: Exportar PDF descarga archivo .pdf</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU25, Export</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>ADMIN_NEGOCIO logueado con reservas en su negocio</preconds>
+											<steps>1. Ir a /admin/reservas
+2. Hacer clic en botón "Exportar PDF"
+3. Verificar que se descarga archivo .pdf
+4. Abrir el PDF y verificar que contiene tabla con reservas</steps>
+											<expected>Archivo .pdf descargado con reporte de reservas</expected>
+									</custom>
+								<is_converted>1</is_converted>
+			</case>
+															<case>
+				<id>C116</id>
+				<title>HU25-CA3: Exportación respeta filtros de fecha</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>Medium</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU25, Export</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>ADMIN_NEGOCIO logueado con reservas en rango de fechas</preconds>
+											<steps>1. Aplicar filtro de fechas en ReservasAdmin
+2. Hacer clic en Exportar Excel
+3. Verificar que el archivo solo contiene reservas dentro del rango seleccionado</steps>
+											<expected>Exportación filtrada por fecha</expected>
+									</custom>
+								<is_converted>1</is_converted>
+			</case>
+								</cases>
+							</section>
+			<section>
+		<name>HU26 - Reporte de Ingresos</name>
+		<description></description>
+						<cases>
+												<case>
+				<id>C117</id>
+				<title>HU26-CA1: Tarjeta de ingresos visible en Métricas</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU26, Income</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>ADMIN_NEGOCIO logueado</preconds>
+											<steps>1. Ir a /admin/metricas
+2. Verificar que ve la tarjeta "Ingresos estimados" en verde
+3. Verificar que muestra un valor numérico con formato de moneda</steps>
+											<expected>Tarjeta de ingresos visible con valor formateado</expected>
+									</custom>
+								<is_converted>1</is_converted>
+			</case>
+															<case>
+				<id>C118</id>
+				<title>HU26-CA2: Selector de período funciona</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU26, Income</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>ADMIN_NEGOCIO en página de métricas</preconds>
+											<steps>1. Verificar selector con opciones: Hoy, Esta semana, Este mes
+2. Cambiar a "Hoy" y verificar ingresos del día
+3. Cambiar a "Esta semana" y verificar ingresos de la semana
+4. Cambiar a "Este mes" y verificar ingresos del mes</steps>
+											<expected>Datos se actualizan al cambiar el período</expected>
+									</custom>
+								<is_converted>1</is_converted>
+			</case>
+															<case>
+				<id>C119</id>
+				<title>HU26-CA3: Cálculo correcto de ingresos</title>
+												<template>Test Case (Text)</template>
+																<type>Functional</type>
+																<priority>High</priority>
+																				<estimate></estimate>
+																								<references></references>
+												<labels>HU26, Income</labels>
+								<automation>No hay automatización adjunta</automation>
+												<custom>
+											<automation_type><id>0</id><value> None</value></automation_type>
+											<is_automated>false</is_automated>
+											<automation_candidate><id>1</id><value> Yes</value></automation_candidate>
+											<preconds>ADMIN_NEGOCIO con reservas completadas con precios conocidos</preconds>
+											<steps>1. Verificar que el total de ingresos coincide con la suma de precios de reservas COMPLETADAS
+2. Verificar que averagePerReservation = totalIncome / cantidad de reservas</steps>
+											<expected>Cálculo correcto: suma de precios de reservas completadas</expected>
+									</custom>
+								<is_converted>1</is_converted>
+			</case>
+								</cases>
+							</section>
+	</sections>
+</suite>

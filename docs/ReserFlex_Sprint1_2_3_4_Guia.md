@@ -1,10 +1,11 @@
-# ReserFlex — Guía de Desarrollo Sprint 3, 4 y 5
+# ReserFlex — Guía de Desarrollo Sprint 1 al 4
 
 > **Documento de contexto para IA generativa y equipo de desarrollo**
 > Proyecto: ReserFlex | Equipo: Nuvix Inc — Grupo 4
 > Integrantes: Rubén Cuenca · Jeremy Jiménez · Marco Ríos
 > Curso: GR2SW — Calidad de Software | EPN 2026-A
 > Docente: Ph.D. Cindy Pamela López Chulca
+> **Alcance:** Sprints 1 al 4 (Sprint 5 suspendido por cuestiones de tiempo)
 
 ---
 
@@ -40,97 +41,33 @@ Health:    https://reserflex-production.up.railway.app/api/health
 
 ---
 
-## ESTADO DEL PROYECTO — LO QUE YA EXISTE
+### Estructura de Fases — Sprint 1 a 5
 
-### Sprint 1 ✅ COMPLETADO (13 pts)
-
-**HU1 — Login y Registro**
-- Registro con verificación de correo (Brevo API)
-- Login con JWT que incluye: `id`, `role`, `email`, `businessId`, `name`
-- Indicadores de fortaleza de contraseña en el frontend
-- Redirección por rol: SUPER_ADMIN→`/admin/negocios`, ADMIN_NEGOCIO→`/admin/dashboard`, EMPLEADO→`/admin/empleado`, CLIENTE→`/`
-- Super Admin puede iniciar sesión sin verificar correo (excepción explícita)
-- Middleware de autenticación: `authenticate` y `authorize(...roles)`
-
-**HU3 — Registrar Negocios**
-- 6 tipos: `SALON_BARBERIA`, `CONSULTORIO`, `RESTAURANTE`, `HOTEL`, `CANCHA_GIMNASIO`, `GENERICO`
-- Al crear negocio se genera Admin automáticamente con contraseña temporal
-- Credenciales enviadas por correo vía Brevo
-- Solo `SUPER_ADMIN` puede crear negocios
-
-**HU18 — URL Única**
-- Slug generado desde el nombre: normalizar → minúsculas → guiones
-- Campo `slug` con `@@unique` en Prisma
-- Endpoint público: `GET /api/business/slug/:slug` (filtra `active: true`)
-- Ruta frontend: `/reservas/:slug` → `BusinessPortal.jsx`
-
-### Sprint 2 ✅ COMPLETADO (47 pts)
-
-**HU2 — Recuperación de contraseña**
-- `POST /api/auth/forgot-password` → genera token 60 min
-- `POST /api/auth/reset-password` → valida token y actualiza contraseña
-- `PATCH /api/auth/change-password` → cambio desde perfil (requiere auth)
-- Páginas: `ForgotPassword.jsx`, `ResetPassword.jsx`, `Profile.jsx`
-
-**HU4 — Horarios**
-- Modelo `Schedule` (businessId, dayOfWeek 0-6, startTime "HH:mm", endTime, isActive)
-- `GET /api/schedules/:businessId` — público
-- `PUT /api/schedules/:businessId` — upsert batch (ADMIN)
-
-**HU5 — Empleados y servicios**
-- Modelo `EmployeeService` (many-to-many)
-- `GET/POST /api/employees/:businessId`
-- `PUT /api/employees/:employeeId/services` — reemplaza asignaciones
-
-**HU6 — Catálogo de servicios**
-- Modelo `Service` (name, description, price: Float, duration: Int minutos, active: Boolean)
-- CRUD completo con soft delete (`active: false`)
-- `GET /api/services/:businessId` público con empleados incluidos
-
-**HU7 — Reservar servicio**
-- `GET /api/reservations/slots?businessId&serviceId&employeeId&date`
-- Generación de slots basada en horario del día y duración del servicio
-- `POST /api/reservations` — requiere auth, valida disponibilidad, envía correo confirmación
-
-**HU8 — Reservar sin cuenta**
-- `POST /api/reservations/guest` — sin auth
-- Campos extra en Reservation: `guestName`, `guestEmail`, `guestPhone`, `accessCode` (6 dígitos)
-
-**HU9 — Cancelar/Reprogramar**
-- `PATCH /api/reservations/:id/cancel` — política 2h antes
-- `PATCH /api/reservations/:id/reschedule` — política 2h antes
-
-**HU10 — Historial**
-- `GET /api/reservations/my` — filtros por status y businessId
-
-**HU11 — Agenda empleado**
-- `GET /api/reservations/employee?date=` — filtrado por fecha
-
-**HU12 — Gestión admin**
-- `GET /api/reservations/business/:businessId?date&status`
-- `PATCH /api/reservations/:id/status` — cambio de estado (ADMIN)
-- Búsqueda de clientes para reserva manual
-
-**HU13 — Métricas**
-- `GET /api/reservations/metrics/:businessId`
-- Retorna: today, week, month, cancellationRate, byEmployee
-- Gráfico de barras con recharts en `Metricas.jsx`
-
-**HU14 — Confirmación por correo**
-- `sendConfirmationEmail(to, reservation, accessCode?)` en `mail.service.js`
-
-**HU17 — Toggle negocio**
-- `PATCH /api/business/:id/toggle` — activa/desactiva (SUPER_ADMIN)
-
-### Mejoras adicionales implementadas en Sprint 2
-
-- **AdminNav.jsx** — navbar compartida con link activo (useLocation), link a Perfil
-- **Profile.jsx** — cambio de contraseña con validación de clave actual
-- **Fecha mínima en Reservar** — `min={new Date().toISOString().split('T')[0]}`
-- **Página 404** — catch-all para rutas inexistentes
-- **Modal de creación manual de reserva** en ReservasAdmin con búsqueda de clientes
-- **Toggle activo/inactivo** en Dashboard de Super Admin
-- **businessId en JWT** — incluido en el payload del token
+> **Sprint 1 (semana 1):** HU1 Login y Registro, HU3 Registrar Negocios, HU18 URL única. 13 pts.
+> - Backend: Prisma (User, Business, Schedule), JWT, Brevo, normalización de slug.
+> - Frontend: Login, Register, Dashboard, verificación de correo.
+>
+> **Sprint 2 (semana 2):** HU2 Recuperación, HU4 Horarios, HU5 Empleados/servicios, HU6 Servicios,
+> HU7 Reservar reglado, HU8 Reservar sin cuenta, HU9 Cancelar/Reprogramar,
+> HU10 Historial, HU11 Agenda, HU12 Gestión admin, HU13 Métricas, HU14 Correo, HU17 Toggle negocio. 47 pts.
+> - Modelos: Service, EmployeeService, Reservation.
+> - Frontend: Home, Catálogo, Reservar, MisReservas, ReservasAdmin, Horarios, Empleados,
+> Servicios, Métricas, Agenda.
+>
+> **Sprint 3 (semana 3):** HU19 Responsive total, HU21 Preview de slug, HU22 Filtros
+> en portal público, HU31 Portal de mesas para restaurantes. 18 pts.
+> - Modelos: RestaurantTable, TableReservation, BusinessPhoto.
+> - Frontend: PlanoRestaurante, RestaurantFloorPlan, themeHelper, AdminNav v2.
+>
+> **Sprint 4 (semana 4):** HU20 Onboarding nuevos admins, HU23 Reseñas, HU24 Reply reseñas,
+> HU25 Exportar a Excel/PDF, HU26 Ingresos estimados. 17 pts.
+> - Modelos: Review.
+> - Frontend: OnboardingModal, Resenas (admin), export buttons en ReservasAdmin,
+> tarjeta ingresos en Métricas.
+>
+> **Sprint 5 — Suspendido:** 16 pts no ejecutados por falta de tiempo.
+> - HUs: Perfil mejorado, historial visitas, descuentos, landing page pública.
+> - No se implementaron cambios de modelo, backend ni frontend asociados.
 
 ---
 
@@ -475,9 +412,9 @@ test(HU22): descripción
 
 ### Fechas de sprints en Azure DevOps
 ```
-Sprint 3: 16 jun 2026 → 27 jun 2026  (revisión pares: 3 jul 2026)
-Sprint 4: 30 jun 2026 → 11 jul 2026  (revisión: por confirmar)
-Sprint 5: 14 jul 2026 → 25 jul 2026  (revisión: por confirmar)
+Sprint 3: 16 jun 2026 → 27 jun 2026 (revisión pares: 3 jul 2026)
+Sprint 4: 30 jun 2026 → 11 jul 2026
+**Sprint 5: Suspendido — no implementado**
 ```
 
 ---
@@ -1664,43 +1601,43 @@ Vie 11  Buffer: fix de issues post-deploy
 
 ---
 
-## CHECKLIST ENTREGA SPRINT 4
+## CHECKLIST ENTREGA SPRINT 4 ✅ COMPLETADO
 
 Para el grupo revisor (revisión: por confirmar):
 
 ## Técnico
-- [ ] `git tag v4.0.0` creado en GitHub
-- [ ] Deploy en Railway funcionando (health check verde)
-- [ ] Deploy en Vercel funcionando (sin errores en consola)
-- [ ] Migración Sprint 4 aplicada en Railway
+- [x] `git tag v4.0.0` creado en GitHub
+- [x] Deploy en Railway funcionando (health check verde)
+- [x] Deploy en Vercel funcionando (sin errores en consola)
+- [x] Migración Sprint 4 aplicada en Railway
 
 ## HU20 — Onboarding ✅
-- [ ] Modal aparece al primer login del admin
-- [ ] 4 pasos con navegación funcional
-- [ ] Botón Skip cierra el modal
-- [ ] Progreso persiste en localStorage
+- [x] Modal aparece al primer login del admin
+- [x] 4 pasos con navegación funcional
+- [x] Botón Skip cierra el modal
+- [x] Progreso persiste en localStorage
 
 ## HU23 — Reseñas ✅
-- [ ] Botón "Dejar reseña" en MisReservas (COMPLETADAS)
-- [ ] Selector de 5 estrellas funcional
-- [ ] Reseña se guarda en BD
-- [ ] Reseñas visibles en portal público
-- [ ] Paginación funciona
+- [x] Botón "Dejar reseña" en MisReservas (COMPLETADAS)
+- [x] Selector de 5 estrellas funcional
+- [x] Reseña se guarda en BD
+- [x] Reseñas visibles en portal público
+- [x] Paginación funciona
 
 ## HU24 — Respuesta a reseñas ✅
-- [ ] Admin puede ver lista de reseñas en Resenas.jsx
-- [ ] Botón responder abre textarea
-- [ ] Respuesta se guarda y muestra
+- [x] Admin puede ver lista de reseñas en Resenas.jsx
+- [x] Botón responder abre textarea
+- [x] Respuesta se guarda y muestra
 
 ## HU25 — Exportación ✅
-- [ ] Botón Exportar Excel descarga .xlsx
-- [ ] Botón Exportar PDF descarga .pdf
-- [ ] Archivo contiene datos correctos
+- [x] Botón Exportar Excel descarga .xlsx
+- [x] Botón Exportar PDF descarga .pdf
+- [x] Archivo contiene datos correctos
 
 ## HU26 — Ingresos ✅
-- [ ] Tarjeta de ingresos en Metricas.jsx
-- [ ] Selector day/week/month funcional
-- [ ] Cálculo correcto de totales
+- [x] Tarjeta de ingresos en Metricas.jsx
+- [x] Selector day/week/month funcional
+- [x] Cálculo correcto de totales
 
 ---
 
@@ -1708,53 +1645,21 @@ Para el grupo revisor (revisión: por confirmar):
 
 ---
 
-# SPRINT 5 — FIDELIZACIÓN Y CIERRE
+# SPRINT 5 — SUSPENDIDO
 
-**Período:** 14 julio – 25 julio 2026
-**Puntos:** 16 pts
+> ⚠️ **Este sprint no será implementado por cuestiones de tiempo.**
+>
+> Sprint 5 estaba planificado con HUs de fidelización (HU27–HU30, 16 pts) pero
+> no podrá ejecutarse. Las HUs correspondientes se marcan como no implementadas.
 
-## HUs del Sprint 5
-
-| HU | Descripción | Pts |
-|---|---|---|
-| HU27 | Perfil público del negocio mejorado | 3 |
-| HU28 | Historial de visitas y cliente frecuente | 5 |
-| HU29 | Descuentos para clientes frecuentes | 5 |
-| HU30 | Landing page pública de ReserFlex | 3 |
-
-## Nuevos modelos Prisma
-
-```prisma
-model LoyaltyConfig {
-  id               String  @id @default(uuid())
-  businessId       String  @unique
-  minReservations  Int     @default(5)
-  discountPercent  Float   @default(10)
-  active           Boolean @default(true)
-
-  business         Business @relation(fields: [businessId], references: [id])
-}
-```
-
-## Endpoints nuevos Sprint 5
-
-| Método | Endpoint | HU | Auth |
+| HU | Descripción | Pts | Estado |
 |---|---|---|---|
-| GET | /api/clients/:businessId | HU28 | ADMIN |
-| GET | /api/clients/:businessId/:clientId | HU28 | ADMIN |
-| GET | /api/loyalty/:businessId | HU29 | ADMIN |
-| PUT | /api/loyalty/:businessId | HU29 | ADMIN |
-
-## Páginas frontend nuevas Sprint 5
-
-- `frontend/src/pages/LandingPage.jsx` — hero, features, CTA
-- `frontend/src/pages/admin/Clientes.jsx` — listado con badge frecuente
-- Modificar `BusinessPortal.jsx` — horarios, detalle servicio, reseñas paginadas
-- Modificar `App.jsx` — redirección condicional en `/` según sesión
+| HU27 | Perfil público del negocio mejorado | 3 | 🚫 No implementado |
+| HU28 | Historial de visitas y cliente frecuente | 5 | 🚫 No implementado |
+| HU29 | Descuentos para clientes frecuentes | 5 | 🚫 No implementado |
+| HU30 | Landing page pública de ReserFlex | 3 | 🚫 No implementado |
 
 ---
-
-## SCRIPT DE SEED — DATOS DE PRUEBA
 
 Para facilitar las pruebas del equipo evaluador, existe un script de seed que crea:
 
@@ -1854,5 +1759,5 @@ Para el grupo revisor (revisión: 3 julio 2026):
 
 ---
 
-*Fin del documento — ReserFlex Sprint 3, 4 y 5*
-*Generado: junio 2026 | Nuvix Inc — Grupo 4 | GR2SW EPN*
+*Fin del documento — ReserFlex Sprint 1 al 4*
+*Generado: julio 2026 | Nuvix Inc — Grupo 4 | GR2SW EPN*
