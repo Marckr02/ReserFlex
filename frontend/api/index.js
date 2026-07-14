@@ -854,4 +854,20 @@ app.patch('/api/reviews/:id/reply', authenticate, authorize('ADMIN_NEGOCIO', 'SU
   }
 });
 
+app.post('/api/seed', async (req, res) => {
+  try {
+    if (req.headers['x-vercel-secret'] !== process.env.SEED_SECRET) return res.status(403).json({ message: 'No autorizado' });
+    const hashedPassword = await bcrypt.hash('Admin123', 10);
+    const user = await prisma.user.upsert({
+      where: { email: 'superadmin@reservflex.com' },
+      update: {},
+      create: { id: crypto.randomUUID(), name: 'Super Admin', email: 'superadmin@reservflex.com', password: hashedPassword, role: 'SUPER_ADMIN', verified: true, createdAt: new Date() }
+    });
+    res.json({ message: 'Seed ejecutado correctamente', userId: user.id });
+  } catch (error) {
+    console.error('seed:', error);
+    res.status(500).json({ message: 'Error en seed', error: error.message });
+  }
+});
+
 module.exports = app;
