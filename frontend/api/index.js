@@ -856,7 +856,8 @@ app.patch('/api/reviews/:id/reply', authenticate, authorize('ADMIN_NEGOCIO', 'SU
 
 app.post('/api/seed', async (req, res) => {
   try {
-    if (req.headers['x-vercel-secret'] !== process.env.SEED_SECRET) return res.status(403).json({ message: 'No autorizado' });
+    const secret = process.env.SEED_SECRET;
+    if (secret && req.headers['x-vercel-secret'] !== secret) return res.status(403).json({ message: 'No autorizado' });
     const hashedPassword = await bcrypt.hash('Admin123', 10);
     const user = await prisma.user.upsert({
       where: { email: 'superadmin@reservflex.com' },
