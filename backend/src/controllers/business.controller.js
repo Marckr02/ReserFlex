@@ -1,16 +1,17 @@
-const prisma = require('../lib/prisma');
+const supabase = require('../lib/supabase');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { sendCredentialsEmail } = require('../services/mail.service');
 
-const normalizeSlug = (value) => value
-  .toLowerCase()
-  .normalize('NFD')
-  .replace(/[\u0300-\u036f]/g, '')
-  .replace(/[^a-z0-9\s-]/g, '')
-  .replace(/\s+/g, '-')
-  .replace(/-+/g, '-')
-  .trim();
+const normalizeSlug = (value) =>
+  value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
 
 const createBusiness = async (req, res) => {
   try {
@@ -22,34 +23,43 @@ const createBusiness = async (req, res) => {
 
     const slug = normalizeSlug(name);
 
-    const existingBusiness = await prisma.business.findUnique({ where: { slug } });
+    const { data: existingBusiness } = await supabase
+      .from('Business')
+      .select('id')
+      .eq('slug', slug)
+      .single();
+
     if (existingBusiness) {
       return res.status(409).json({ message: 'Ya existe un negocio con ese nombre' });
     }
 
-    const business = await prisma.business.create({
-      data: {
-        name,
-        slug,
-        type,
-        address,
-        logoUrl
-      }
-    });
+    const { data: business, error: businessError } = await supabase
+      .from('Business')
+      .insert({ name, slug, type, address, logoUrl })
+      .select()
+      .single();
+
+    if (businessError) {
+      console.error('Error creando negocio:', businessError);
+      return res.status(500).json({ message: 'Error en el servidor', error: businessError.message });
+    }
 
     const tempPassword = crypto.randomBytes(6).toString('hex');
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
-    await prisma.user.create({
-      data: {
-        name: adminName,
-        email: adminEmail,
-        password: hashedPassword,
-        role: 'ADMIN_NEGOCIO',
-        verified: true,
-        businessId: business.id
-      }
+    const { error: userError } = await supabase.from('User').insert({
+      name: adminName,
+      email: adminEmail,
+      password: hashedPassword,
+      role: 'ADMIN_NEGOCIO',
+      verified: true,
+      businessId: business.id,
     });
+
+    if (userError) {
+      console.error('Error creando admin:', userError);
+      return res.status(500).json({ message: 'Error al crear administrador', error: userError.message });
+    }
 
     await sendCredentialsEmail(adminEmail, tempPassword);
 
@@ -59,8 +69,8 @@ const createBusiness = async (req, res) => {
         id: business.id,
         name: business.name,
         slug: business.slug,
-        url: `/reservas/${business.slug}`
-      }
+        url: `/reservas/${business.slug}`,
+      },
     });
   } catch (error) {
     console.error('Error en createBusiness:', error);
@@ -70,17 +80,10 @@ const createBusiness = async (req, res) => {
 
 const getAllBusinesses = async (req, res) => {
   try {
-    const businesses = await prisma.business.findMany({
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        type: true,
-        active: true,
-        createdAt: true
-      },
-      orderBy: { createdAt: 'desc' }
-    });
+    const { data: businesses } = await supabase
+      .from('Business')
+      .select('id, name, slug, type, active, createdAt')
+      .order('createdAt', { ascending: false });
 
     res.json(businesses);
   } catch (error) {
@@ -91,11 +94,12 @@ const getAllBusinesses = async (req, res) => {
 
 const getPublicBusinesses = async (req, res) => {
   try {
-    const businesses = await prisma.business.findMany({
-      where: { active: true },
-      select: { id: true, name: true, slug: true, type: true, address: true },
-      orderBy: { name: 'asc' }
-    });
+    const { data: businesses } = await supabase
+      .from('Business')
+      .select('id, name, slug, type, address')
+      .eq('active', true)
+      .order('name', { ascending: true });
+
     res.json(businesses);
   } catch (error) {
     console.error('Error en getPublicBusinesses:', error);
@@ -107,16 +111,12 @@ const getBusinessBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
 
-    const business = await prisma.business.findFirst({
-      where: { slug, active: true },
-      select: {
-        id: true,
-        name: true,
-        type: true,
-        address: true,
-        logoUrl: true
-      }
-    });
+    const { data: business } = await supabase
+      .from('Business')
+      .select('id, name, type, address, logoUrl')
+      .eq('slug', slug)
+      .eq('active', true)
+      .single();
 
     if (!business) {
       return res.status(404).json({ message: 'Negocio no encontrado' });
@@ -129,16 +129,25 @@ const getBusinessBySlug = async (req, res) => {
   }
 };
 
-// PATCH /api/business/:id/toggle
 const toggleBusiness = async (req, res) => {
   try {
-    const business = await prisma.business.findUnique({ where: { id: req.params.id } });
-    if (!business) return res.status(404).json({ message: 'Negocio no encontrado' });
+    const { data: business } = await supabase
+      .from('Business')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
 
-    const updated = await prisma.business.update({
-      where: { id: req.params.id },
-      data: { active: !business.active }
-    });
+    if (!business) {
+      return res.status(404).json({ message: 'Negocio no encontrado' });
+    }
+
+    const { data: updated } = await supabase
+      .from('Business')
+      .update({ active: !business.active })
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
     res.json({ message: `Negocio ${updated.active ? 'activado' : 'desactivado'}`, active: updated.active });
   } catch (err) {
     console.error('Error toggleBusiness:', err);
@@ -148,10 +157,11 @@ const toggleBusiness = async (req, res) => {
 
 const getBusinessPhotos = async (req, res) => {
   try {
-    const photos = await prisma.businessPhoto.findMany({
-      where: { businessId: req.params.id },
-      orderBy: { order: 'asc' }
-    });
+    const { data: photos } = await supabase
+      .from('BusinessPhoto')
+      .select('*')
+      .eq('businessId', req.params.id)
+      .order('order', { ascending: true });
 
     res.json(photos);
   } catch (error) {
@@ -168,14 +178,18 @@ const uploadBusinessPhotos = async (req, res) => {
     }
 
     const backendUrl = process.env.BACKEND_URL || `${req.protocol}://${req.get('host')}`;
+    const rows = files.map((file, index) => ({
+      businessId: req.params.id,
+      url: `${backendUrl}/uploads/${file.filename}`,
+      order: index,
+    }));
 
-    const created = await Promise.all(files.map((file, index) => prisma.businessPhoto.create({
-      data: {
-        businessId: req.params.id,
-        url: `${backendUrl}/uploads/${file.filename}`,
-        order: index
-      }
-    })));
+    const { data: created, error } = await supabase.from('BusinessPhoto').insert(rows).select();
+
+    if (error) {
+      console.error('Error subiendo fotos:', error);
+      return res.status(500).json({ message: 'Error al subir fotos' });
+    }
 
     res.status(201).json(created);
   } catch (error) {
@@ -192,7 +206,11 @@ const checkSlug = async (req, res) => {
     }
 
     const slug = normalizeSlug(name);
-    const existingBusiness = await prisma.business.findUnique({ where: { slug } });
+    const { data: existingBusiness } = await supabase
+      .from('Business')
+      .select('id')
+      .eq('slug', slug)
+      .single();
 
     res.json({ slug, available: !existingBusiness });
   } catch (error) {
@@ -201,4 +219,13 @@ const checkSlug = async (req, res) => {
   }
 };
 
-module.exports = { createBusiness, getAllBusinesses, getPublicBusinesses, getBusinessBySlug, toggleBusiness, checkSlug, getBusinessPhotos, uploadBusinessPhotos };
+module.exports = {
+  createBusiness,
+  getAllBusinesses,
+  getPublicBusinesses,
+  getBusinessBySlug,
+  toggleBusiness,
+  checkSlug,
+  getBusinessPhotos,
+  uploadBusinessPhotos,
+};

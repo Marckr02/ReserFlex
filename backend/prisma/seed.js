@@ -1,7 +1,11 @@
-const { PrismaClient } = require('@prisma/client');
+require('dotenv').config();
+const { createClient } = require('@supabase/supabase-js');
 const bcrypt = require('bcryptjs');
 
-const prisma = new PrismaClient();
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
 
 const TEMP_PASSWORD = 'Test1234';
 
@@ -124,164 +128,200 @@ const DAYS_OF_WEEK = [
 ];
 
 async function main() {
-  console.log('🌱 Iniciando seed de base de datos...\n');
+  console.log('🌱 Iniciando seed de base de datos Supabase...\n');
 
   const hashedPassword = await bcrypt.hash(TEMP_PASSWORD, 10);
 
   for (const bizData of BUSINESSES) {
     console.log(`📦 Creando: ${bizData.name}...`);
 
-    const existingBusiness = await prisma.business.findUnique({
-      where: { slug: bizData.slug },
-    });
+    const { data: existingBusiness } = await supabase
+      .from('Business')
+      .select('id')
+      .eq('slug', bizData.slug)
+      .single();
 
     if (existingBusiness) {
-      console.log(`   ⚠️  Ya existe, saltando...\n`);
+      console.log(` ⚠️ Ya existe, saltando...\n`);
       continue;
     }
 
-    const business = await prisma.business.create({
-      data: {
+    const { data: business, error: businessError } = await supabase
+      .from('Business')
+      .insert({
         name: bizData.name,
         slug: bizData.slug,
         type: bizData.type,
         address: bizData.address,
         active: true,
-      },
-    });
+      })
+      .select()
+      .single();
 
-    const admin = await prisma.user.create({
-      data: {
+    if (businessError) {
+      console.error('Error creando negocio:', businessError);
+      continue;
+    }
+
+    const { data: admin, error: adminError } = await supabase
+      .from('User')
+      .insert({
         name: bizData.adminName,
         email: bizData.adminEmail,
         password: hashedPassword,
         role: 'ADMIN_NEGOCIO',
         verified: true,
         businessId: business.id,
-      },
-    });
-    console.log(`   ✅ Admin: ${admin.email} / ${TEMP_PASSWORD}`);
+      })
+      .select()
+      .single();
 
-    for (const serviceData of bizData.services) {
-      await prisma.service.create({
-        data: {
-          businessId: business.id,
-          name: serviceData.name,
-          description: serviceData.description,
-          price: serviceData.price,
-          duration: serviceData.duration,
-          active: true,
-        },
-      });
+    if (adminError) {
+      console.error('Error creando admin:', adminError);
+      continue;
     }
-    console.log(`   ✅ ${bizData.services.length} servicios creados`);
+
+    console.log(` ✅ Admin: ${admin.email} / ${TEMP_PASSWORD}`);
+
+    const serviceRows = bizData.services.map((s) => ({
+      businessId: business.id,
+      name: s.name,
+      description: s.description,
+      price: s.price,
+      duration: s.duration,
+      active: true,
+    }));
+
+    const { error: servicesError } = await supabase.from('Service').insert(serviceRows);
+
+    if (servicesError) {
+      console.error('Error creando servicios:', servicesError);
+    } else {
+      console.log(` ✅ ${bizData.services.length} servicios creados`);
+    }
 
     for (let i = 0; i < bizData.employees.length; i++) {
       const empName = bizData.employees[i];
-      const empEmail = `empleado${i + 1}.${bizData.slug}@test.com`.toLowerCase().replace(/\s+/g, '');
-      const employee = await prisma.user.create({
-        data: {
+      const empEmail = `empleado${i + 1}.${bizData.slug}@test.com`
+        .toLowerCase()
+        .replace(/\s+/g, '');
+
+      const { data: employee, error: empError } = await supabase
+        .from('User')
+        .insert({
           name: empName,
           email: empEmail,
           password: hashedPassword,
           role: 'EMPLEADO',
           verified: true,
           businessId: business.id,
-        },
-      });
+        })
+        .select()
+        .single();
 
-      const services = await prisma.service.findMany({
-        where: { businessId: business.id },
-        take: 3,
-      });
-
-      for (const svc of services) {
-        await prisma.employeeService.create({
-          data: {
-            employeeId: employee.id,
-            serviceId: svc.id,
-          },
-        });
+      if (empError) {
+        console.error('Error creando empleado:', empError);
+        continue;
       }
-      console.log(`   ✅ Empleado: ${empEmail} / ${TEMP_PASSWORD}`);
+
+      console.log(` ✅ Empleado: ${empEmail} / ${TEMP_PASSWORD}`);
+
+      const { data: services } = await supabase.from('Service').select('id').eq('businessId', business.id).limit(3);
+
+      if (services && services.length > 0) {
+        const empServiceRows = services.map((svc) => ({
+          employeeId: employee.id,
+          serviceId: svc.id,
+        }));
+
+        await supabase.from('EmployeeService').insert(empServiceRows);
+      }
     }
 
-    for (const day of DAYS_OF_WEEK) {
-      await prisma.schedule.create({
-        data: {
-          businessId: business.id,
-          dayOfWeek: day.day,
-          startTime: day.startTime,
-          endTime: day.endTime,
-          isActive: true,
-        },
-      });
+    const scheduleRows = DAYS_OF_WEEK.map((d) => ({
+      businessId: business.id,
+      dayOfWeek: d.day,
+      startTime: d.startTime,
+      endTime: d.endTime,
+      isActive: true,
+    }));
+
+    const { error: scheduleError } = await supabase.from('Schedule').insert(scheduleRows);
+
+    if (scheduleError) {
+      console.error('Error creando horarios:', scheduleError);
+    } else {
+      console.log(` ✅ Horarios creados (7 días)`);
     }
-    console.log(`   ✅ Horarios creados (7 días)`);
 
     if (bizData.tables) {
-      for (const tableData of bizData.tables) {
-        await prisma.restaurantTable.create({
-          data: {
-            businessId: business.id,
-            number: tableData.number,
-            capacity: tableData.capacity,
-            posX: tableData.posX,
-            posY: tableData.posY,
-            shape: tableData.shape,
-            active: true,
-          },
-        });
+      const tableRows = bizData.tables.map((t) => ({
+        businessId: business.id,
+        number: t.number,
+        capacity: t.capacity,
+        posX: t.posX,
+        posY: t.posY,
+        shape: t.shape,
+        active: true,
+      }));
+
+      const { error: tablesError } = await supabase.from('RestaurantTable').insert(tableRows);
+
+      if (tablesError) {
+        console.error('Error creando mesas:', tablesError);
+      } else {
+        console.log(` ✅ ${bizData.tables.length} mesas creadas`);
       }
-      console.log(`   ✅ ${bizData.tables.length} mesas creadas`);
     }
 
     console.log('');
   }
 
   const superAdminEmail = 'superadmin@reserflex.com';
-  const existingSuperAdmin = await prisma.user.findUnique({
-    where: { email: superAdminEmail },
-  });
+  const { data: existingSuperAdmin } = await supabase
+    .from('User')
+    .select('id')
+    .eq('email', superAdminEmail)
+    .single();
 
   if (!existingSuperAdmin) {
-    await prisma.user.create({
-      data: {
-        name: 'Super Administrador',
-        email: superAdminEmail,
-        password: hashedPassword,
-        role: 'SUPER_ADMIN',
-        verified: true,
-      },
+    const { error: superAdminError } = await supabase.from('User').insert({
+      name: 'Super Administrador',
+      email: superAdminEmail,
+      password: hashedPassword,
+      role: 'SUPER_ADMIN',
+      verified: true,
     });
-    console.log('🔐 Super Admin creado:');
-    console.log(`   Email: ${superAdminEmail}`);
-    console.log(`   Contraseña: ${TEMP_PASSWORD}`);
+
+    if (superAdminError) {
+      console.error('Error creando super admin:', superAdminError);
+    } else {
+      console.log('🔐 Super Admin creado:');
+      console.log(` Email: ${superAdminEmail}`);
+      console.log(` Contraseña: ${TEMP_PASSWORD}`);
+    }
   } else {
-    console.log('⚠️  Super Admin ya existe, saltando...');
+    console.log('⚠️ Super Admin ya existe, saltando...');
   }
 
   console.log('\n✅ Seed completado exitosamente!');
   console.log('\n📋 Credenciales de prueba (todas usan la misma contraseña):');
-  console.log(`   Contraseña para todos: ${TEMP_PASSWORD}`);
-  console.log('\n   ┌─────────────────────────────────────────────────────────────┐');
-  console.log('   │  Rol            │  Email                               │');
-  console.log('   ├─────────────────────────────────────────────────────────────┤');
-  console.log('   │  Super Admin    │  superadmin@reserflex.com             │');
-  console.log('   │  Admin Barbería │  admin.barberia@test.com              │');
-  console.log('   │  Admin Consult. │  admin.consultorio@test.com           │');
-  console.log('   │  Admin Restaur. │  admin.restaurante@test.com          │');
-  console.log('   │  Admin Hotel    │  admin.hotel@test.com                │');
-  console.log('   │  Admin Deportes │  admin.deportes@test.com             │');
-  console.log('   │  Admin Eventos  │  admin.eventos@test.com              │');
-  console.log('   └─────────────────────────────────────────────────────────────┘');
+  console.log(` Contraseña para todos: ${TEMP_PASSWORD}`);
+  console.log('\n ┌─────────────────────────────────────────────────────────────┐');
+  console.log(' │ Rol │ Email │');
+  console.log(' ├─────────────────────────────────────────────────────────────┤');
+  console.log(' │ Super Admin │ superadmin@reserflex.com │');
+  console.log(' │ Admin Barbería │ admin.barberia@test.com │');
+  console.log(' │ Admin Consult. │ admin.consultorio@test.com │');
+  console.log(' │ Admin Restaur. │ admin.restaurante@test.com │');
+  console.log(' │ Admin Hotel │ admin.hotel@test.com │');
+  console.log(' │ Admin Deportes │ admin.deportes@test.com │');
+  console.log(' │ Admin Eventos │ admin.eventos@test.com │');
+  console.log(' └─────────────────────────────────────────────────────────────┘');
 }
 
 main()
   .catch((e) => {
     console.error('❌ Error en seed:', e);
     process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
   });

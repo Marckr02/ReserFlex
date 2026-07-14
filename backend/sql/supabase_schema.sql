@@ -1,0 +1,130 @@
+CREATE TABLE IF NOT EXISTS "User" (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  password TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'CLIENTE' CHECK (role IN ('SUPER_ADMIN','ADMIN_NEGOCIO','EMPLEADO','CLIENTE')),
+  verified BOOLEAN NOT NULL DEFAULT false,
+  "verifyToken" TEXT,
+  "resetToken" TEXT,
+  "resetExpires" TIMESTAMP,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "businessId" TEXT,
+  UNIQUE("email")
+);
+
+CREATE TABLE IF NOT EXISTS "Business" (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  name TEXT NOT NULL,
+  slug TEXT NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('SALON_BARBERIA','CONSULTORIO','RESTAURANTE','HOTEL','CANCHA_GIMNASIO','GENERICO')),
+  address TEXT NOT NULL,
+  "logoUrl" TEXT,
+  active BOOLEAN NOT NULL DEFAULT true,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE("slug")
+);
+
+CREATE TABLE IF NOT EXISTS "Schedule" (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  "businessId" TEXT NOT NULL REFERENCES "Business"(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  "dayOfWeek" INTEGER NOT NULL,
+  "startTime" TEXT NOT NULL,
+  "endTime" TEXT NOT NULL,
+  "isActive" BOOLEAN NOT NULL DEFAULT true,
+  UNIQUE("businessId","dayOfWeek")
+);
+
+CREATE TABLE IF NOT EXISTS "Service" (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  "businessId" TEXT NOT NULL REFERENCES "Business"(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  price DOUBLE PRECISION NOT NULL,
+  duration INTEGER NOT NULL,
+  active BOOLEAN NOT NULL DEFAULT true,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS "EmployeeService" (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  "employeeId" TEXT NOT NULL REFERENCES "User"(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  "serviceId" TEXT NOT NULL REFERENCES "Service"(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  UNIQUE("employeeId","serviceId")
+);
+
+CREATE TABLE IF NOT EXISTS "Reservation" (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  "businessId" TEXT NOT NULL REFERENCES "Business"(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  "serviceId" TEXT NOT NULL REFERENCES "Service"(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  "clientId" TEXT REFERENCES "User"(id) ON DELETE SET NULL ON UPDATE CASCADE,
+  "employeeId" TEXT REFERENCES "User"(id) ON DELETE SET NULL ON UPDATE CASCADE,
+  status TEXT NOT NULL DEFAULT 'PENDIENTE' CHECK (status IN ('PENDIENTE','COMPLETADA','CANCELADA','NO_SE_PRESENTO')),
+  "startTime" TIMESTAMP NOT NULL,
+  "endTime" TIMESTAMP NOT NULL,
+  notes TEXT,
+  "guestName" TEXT,
+  "guestEmail" TEXT,
+  "guestPhone" TEXT,
+  "accessCode" TEXT,
+  price DOUBLE PRECISION,
+  "discountPercent" DOUBLE PRECISION,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS "RestaurantTable" (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  "businessId" TEXT NOT NULL REFERENCES "Business"(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  number INTEGER NOT NULL,
+  capacity INTEGER NOT NULL,
+  "posX" DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "posY" DOUBLE PRECISION NOT NULL DEFAULT 0,
+  shape TEXT NOT NULL DEFAULT 'round',
+  active BOOLEAN NOT NULL DEFAULT true,
+  UNIQUE("businessId","number")
+);
+
+CREATE TABLE IF NOT EXISTS "TableReservation" (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  "tableId" TEXT NOT NULL REFERENCES "RestaurantTable"(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  "businessId" TEXT NOT NULL REFERENCES "Business"(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  date TEXT NOT NULL,
+  time TEXT NOT NULL,
+  guests INTEGER NOT NULL,
+  occasion TEXT,
+  status TEXT NOT NULL DEFAULT 'PENDIENTE' CHECK (status IN ('PENDIENTE','COMPLETADA','CANCELADA','NO_SE_PRESENTO')),
+  "clientId" TEXT REFERENCES "User"(id) ON DELETE SET NULL ON UPDATE CASCADE,
+  "guestName" TEXT,
+  "guestEmail" TEXT,
+  "guestPhone" TEXT,
+  "accessCode" TEXT,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS "BusinessPhoto" (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  "businessId" TEXT NOT NULL REFERENCES "Business"(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  url TEXT NOT NULL,
+  caption TEXT,
+  "order" INTEGER NOT NULL DEFAULT 0,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS "Review" (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  "reservationId" TEXT NOT NULL REFERENCES "Reservation"(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  "businessId" TEXT NOT NULL REFERENCES "Business"(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  comment TEXT,
+  reply TEXT,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE("reservationId")
+);
+
+ALTER TABLE "User" ADD CONSTRAINT "User_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"(id) ON DELETE SET NULL ON UPDATE CASCADE;
+CREATE INDEX IF NOT EXISTS "User_email_key" ON "User"("email");
+CREATE INDEX IF NOT EXISTS "Business_slug_key" ON "Business"("slug");
+CREATE INDEX IF NOT EXISTS "Schedule_businessId_dayOfWeek_key" ON "Schedule"("businessId","dayOfWeek");
+CREATE INDEX IF NOT EXISTS "EmployeeService_employeeId_serviceId_key" ON "EmployeeService"("employeeId","serviceId");
+CREATE INDEX IF NOT EXISTS "RestaurantTable_businessId_number_key" ON "RestaurantTable"("businessId","number");
+CREATE INDEX IF NOT EXISTS "Review_reservationId_key" ON "Review"("reservationId");

@@ -1,4 +1,4 @@
-const prisma = require('../lib/prisma');
+const supabase = require('../lib/supabase');
 const crypto = require('crypto');
 const { sendTableConfirmationEmail } = require('../services/mail.service');
 
@@ -7,22 +7,23 @@ const getTables = async (req, res) => {
     const { businessId } = req.params;
     const { date, time } = req.query;
 
-    const tables = await prisma.restaurantTable.findMany({
-      where: { businessId, active: true },
-      orderBy: { number: 'asc' }
-    });
+    const { data: tables } = await supabase
+      .from('RestaurantTable')
+      .select('*')
+      .eq('businessId', businessId)
+      .eq('active', true)
+      .order('number', { ascending: true });
 
     if (!date || !time) {
       return res.json(tables.map((table) => ({ ...table, status: 'available', reservation: null })));
     }
 
-    const reservations = await prisma.tableReservation.findMany({
-      where: {
-        businessId,
-        date,
-        status: { not: 'CANCELADA' }
-      }
-    });
+    const { data: reservations } = await supabase
+      .from('TableReservation')
+      .select('*')
+      .eq('businessId', businessId)
+      .eq('date', date)
+      .neq('status', 'CANCELADA');
 
     const [queryHour, queryMinute] = time.split(':').map(Number);
     const currentMinutes = queryHour * 60 + queryMinute;
@@ -56,16 +57,17 @@ const reserveTable = async (req, res) => {
       return res.status(400).json({ message: 'Mesa, negocio, fecha, hora y número de personas son requeridos' });
     }
 
-    const conflict = await prisma.tableReservation.findFirst({
-      where: {
-        tableId,
-        date,
-        time,
-        status: { not: 'CANCELADA' }
-      }
-    });
+    const { data: existingReservations } = await supabase
+      .from('TableReservation')
+      .select('*')
+      .eq('tableId', tableId)
+      .eq('date', date)
+      .eq('time', time)
+      .neq('status', 'CANCELADA');
 
-    if (conflict) {
+    const existing = existingReservations?.[0];
+
+    if (existing) {
       return res.status(409).json({ message: 'Esta mesa ya está reservada para esa fecha y hora' });
     }
 
@@ -73,15 +75,17 @@ const reserveTable = async (req, res) => {
       return res.status(400).json({ message: 'Completa los datos del invitado o inicia sesión' });
     }
 
-    const table = await prisma.restaurantTable.findUnique({ where: { id: tableId } });
+    const { data: table } = await supabase.from('RestaurantTable').select('*').eq('id', tableId).single();
+
     if (!table) {
       return res.status(404).json({ message: 'Mesa no encontrada' });
     }
 
     const accessCode = clientId ? null : crypto.randomInt(100000, 999999).toString();
 
-    const reservation = await prisma.tableReservation.create({
-      data: {
+    const { data: reservation, error } = await supabase
+      .from('TableReservation')
+      .insert({
         tableId,
         businessId,
         date,
@@ -92,18 +96,20 @@ const reserveTable = async (req, res) => {
         guestName: guestName || null,
         guestEmail: guestEmail || null,
         guestPhone: guestPhone || null,
-        accessCode
-      },
-      include: { table: true }
-    });
+        accessCode,
+      })
+      .select()
+      .single();
 
-    const business = await prisma.business.findUnique({
-      where: { id: businessId },
-      select: { name: true }
-    });
+    if (error) {
+      console.error('Error reservando mesa:', error);
+      return res.status(500).json({ message: 'Error al reservar mesa' });
+    }
+
+    const { data: business } = await supabase.from('Business').select('name').eq('id', businessId).single();
 
     const email = clientId
-      ? (await prisma.user.findUnique({ where: { id: clientId }, select: { email: true } }))?.email
+      ? (await supabase.from('User').select('email').eq('id', clientId).single()).data?.email
       : guestEmail;
 
     if (email) {
@@ -122,33 +128,47 @@ const createTable = async (req, res) => {
     const { businessId } = req.params;
     const { number, capacity, posX, posY, shape } = req.body;
 
-    const table = await prisma.restaurantTable.create({
-      data: {
+    const { data: table, error } = await supabase
+      .from('RestaurantTable')
+      .insert({
         businessId,
         number: parseInt(number, 10),
         capacity: parseInt(capacity, 10),
         posX: Number.isFinite(Number(posX)) ? parseFloat(posX) : 10,
         posY: Number.isFinite(Number(posY)) ? parseFloat(posY) : 10,
-        shape: shape || 'round'
+        shape: shape || 'round',
+      })
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === '23505') {
+        return res.status(409).json({ message: `La mesa número ${req.body.number} ya existe` });
       }
-    });
+      console.error('Error creando mesa:', error);
+      return res.status(500).json({ message: 'Error al crear mesa' });
+    }
 
     res.status(201).json(table);
   } catch (error) {
     console.error('Error createTable:', error);
-    if (error.code === 'P2002') {
-      return res.status(409).json({ message: `La mesa número ${req.body.number} ya existe` });
-    }
     res.status(500).json({ message: 'Error al crear mesa' });
   }
 };
 
 const updateTable = async (req, res) => {
   try {
-    const table = await prisma.restaurantTable.update({
-      where: { id: req.params.tableId },
-      data: req.body
-    });
+    const { data: table, error } = await supabase
+      .from('RestaurantTable')
+      .update(req.body)
+      .eq('id', req.params.tableId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error actualizando mesa:', error);
+      return res.status(500).json({ message: 'Error al actualizar mesa' });
+    }
 
     res.json(table);
   } catch (error) {
@@ -159,10 +179,15 @@ const updateTable = async (req, res) => {
 
 const deleteTable = async (req, res) => {
   try {
-    await prisma.restaurantTable.update({
-      where: { id: req.params.tableId },
-      data: { active: false }
-    });
+    const { error } = await supabase
+      .from('RestaurantTable')
+      .update({ active: false })
+      .eq('id', req.params.tableId);
+
+    if (error) {
+      console.error('Error eliminando mesa:', error);
+      return res.status(500).json({ message: 'Error al eliminar mesa' });
+    }
 
     res.json({ message: 'Mesa eliminada' });
   } catch (error) {

@@ -1,8 +1,7 @@
-const prisma = require('../lib/prisma');
+const supabase = require('../lib/supabase');
 const crypto = require('crypto');
 const { sendConfirmationEmail } = require('../services/mail.service');
 
-// Helper: generar slots disponibles
 const generateSlots = (startTime, endTime, durationMinutes, existingReservations) => {
   const slots = [];
   const [sh, sm] = startTime.split(':').map(Number);
@@ -11,13 +10,13 @@ const generateSlots = (startTime, endTime, durationMinutes, existingReservations
   const end = eh * 60 + em;
 
   while (current + durationMinutes <= end) {
-    const slotStart = `${String(Math.floor(current/60)).padStart(2,'0')}:${String(current%60).padStart(2,'0')}`;
-    const slotEnd = `${String(Math.floor((current+durationMinutes)/60)).padStart(2,'0')}:${String((current+durationMinutes)%60).padStart(2,'0')}`;
+    const slotStart = `${String(Math.floor(current / 60)).padStart(2, '0')}:${String(current % 60).padStart(2, '0')}`;
+    const slotEnd = `${String(Math.floor((current + durationMinutes) / 60)).padStart(2, '0')}:${String((current + durationMinutes) % 60).padStart(2, '0')}`;
 
-    const isOccupied = existingReservations.some(r => {
+    const isOccupied = existingReservations.some((r) => {
       const rStart = new Date(r.startTime).getHours() * 60 + new Date(r.startTime).getMinutes();
       const rEnd = new Date(r.endTime).getHours() * 60 + new Date(r.endTime).getMinutes();
-      return current < rEnd && (current + durationMinutes) > rStart;
+      return current < rEnd && current + durationMinutes > rStart;
     });
 
     slots.push({ startTime: slotStart, endTime: slotEnd, available: !isOccupied });
@@ -26,31 +25,43 @@ const generateSlots = (startTime, endTime, durationMinutes, existingReservations
   return slots;
 };
 
-// GET /api/reservations/slots?businessId=&serviceId=&employeeId=&date=
 const getSlots = async (req, res) => {
   try {
     const { businessId, serviceId, employeeId, date } = req.query;
-    const service = await prisma.service.findUnique({ where: { id: serviceId } });
+
+    const { data: services } = await supabase.from('Service').select('*').eq('id', serviceId).limit(1);
+    const service = services?.[0];
     if (!service) return res.status(404).json({ message: 'Servicio no encontrado' });
 
     const dayOfWeek = new Date(date).getDay();
-    const schedule = await prisma.schedule.findFirst({
-      where: { businessId, dayOfWeek, isActive: true }
-    });
+
+    const { data: schedules } = await supabase
+      .from('Schedule')
+      .select('*')
+      .eq('businessId', businessId)
+      .eq('dayOfWeek', dayOfWeek)
+      .eq('isActive', true)
+      .limit(1);
+
+    const schedule = schedules?.[0];
     if (!schedule) return res.json({ slots: [], message: 'No hay atención este día' });
 
     const dayStart = new Date(`${date}T00:00:00`);
-    const dayEnd   = new Date(`${date}T23:59:59`);
-    const existing = await prisma.reservation.findMany({
-      where: {
-        businessId,
-        employeeId: employeeId || undefined,
-        status: { not: 'CANCELADA' },
-        startTime: { gte: dayStart, lte: dayEnd }
-      }
-    });
+    const dayEnd = new Date(`${date}T23:59:59`);
 
-    const slots = generateSlots(schedule.startTime, schedule.endTime, service.duration, existing);
+    let query = supabase
+      .from('Reservation')
+      .select('startTime, endTime')
+      .eq('businessId', businessId)
+      .neq('status', 'CANCELADA')
+      .gte('startTime', dayStart.toISOString())
+      .lte('startTime', dayEnd.toISOString());
+
+    if (employeeId) query = query.eq('employeeId', employeeId);
+
+    const { data: existing } = await query;
+
+    const slots = generateSlots(schedule.startTime, schedule.endTime, service.duration, existing || []);
     res.json({ slots });
   } catch (err) {
     console.error('Error getSlots:', err);
@@ -58,39 +69,57 @@ const getSlots = async (req, res) => {
   }
 };
 
-// POST /api/reservations — HU7 cliente registrado
 const createReservation = async (req, res) => {
   try {
     const { businessId, serviceId, employeeId, startTime, notes } = req.body;
-    const service = await prisma.service.findUnique({ where: { id: serviceId } });
+
+    const { data: services } = await supabase.from('Service').select('*').eq('id', serviceId).limit(1);
+    const service = services?.[0];
+    if (!service) return res.status(404).json({ message: 'Servicio no encontrado' });
+
     const start = new Date(startTime);
-    const end   = new Date(start.getTime() + service.duration * 60000);
+    const end = new Date(start.getTime() + service.duration * 60000);
 
-    // Verificar disponibilidad
-    const conflict = await prisma.reservation.findFirst({
-      where: {
-        businessId, employeeId: employeeId || undefined,
-        status: { not: 'CANCELADA' },
-        OR: [{ startTime: { lt: end }, endTime: { gt: start } }]
-      }
-    });
-    if (conflict) return res.status(409).json({ message: 'El horario ya no está disponible' });
+    let query = supabase
+      .from('Reservation')
+      .select('id')
+      .eq('businessId', businessId)
+      .neq('status', 'CANCELADA')
+      .lt('startTime', end.toISOString())
+      .gt('endTime', start.toISOString());
 
-    const reservation = await prisma.reservation.create({
-      data: {
-        businessId, serviceId,
+    if (employeeId) query = query.eq('employeeId', employeeId);
+
+    const { data: existing } = await query.limit(1);
+
+    if (existing && existing.length > 0) {
+      return res.status(409).json({ message: 'El horario ya no está disponible' });
+    }
+
+    const { data: reservation, error } = await supabase
+      .from('Reservation')
+      .insert({
+        businessId,
+        serviceId,
         clientId: req.user.id,
         employeeId: employeeId || null,
-        startTime: start, endTime: end, notes,
+        startTime: start.toISOString(),
+        endTime: end.toISOString(),
+        notes,
         price: service.price,
-        status: 'PENDIENTE'
-      },
-      include: { service: true, business: true, employee: true }
-    });
+        status: 'PENDIENTE',
+      })
+      .select()
+      .single();
 
-    // Confirmación por correo (HU14)
-    const client = await prisma.user.findUnique({ where: { id: req.user.id } });
-    await sendConfirmationEmail(client.email, reservation);
+    if (error) {
+      console.error('Error creando reserva:', error);
+      return res.status(500).json({ message: 'Error al crear reserva' });
+    }
+
+    const { data: users } = await supabase.from('User').select('email').eq('id', req.user.id).limit(1);
+    const client = users?.[0];
+    if (client) await sendConfirmationEmail(client.email, reservation);
 
     res.status(201).json(reservation);
   } catch (err) {
@@ -99,26 +128,41 @@ const createReservation = async (req, res) => {
   }
 };
 
-// POST /api/reservations/guest — HU8 sin cuenta
 const createGuestReservation = async (req, res) => {
   try {
     const { businessId, serviceId, employeeId, startTime, guestName, guestEmail, guestPhone, notes } = req.body;
-    const service = await prisma.service.findUnique({ where: { id: serviceId } });
+
+    const { data: services } = await supabase.from('Service').select('*').eq('id', serviceId).limit(1);
+    const service = services?.[0];
+    if (!service) return res.status(404).json({ message: 'Servicio no encontrado' });
+
     const start = new Date(startTime);
-    const end   = new Date(start.getTime() + service.duration * 60000);
+    const end = new Date(start.getTime() + service.duration * 60000);
     const accessCode = crypto.randomInt(100000, 999999).toString();
 
-    const reservation = await prisma.reservation.create({
-      data: {
-        businessId, serviceId,
+    const { data: reservation, error } = await supabase
+      .from('Reservation')
+      .insert({
+        businessId,
+        serviceId,
         employeeId: employeeId || null,
-        startTime: start, endTime: end, notes,
-        guestName, guestEmail, guestPhone,
-        accessCode, status: 'PENDIENTE',
-        price: service.price
-      },
-      include: { service: true, business: true }
-    });
+        startTime: start.toISOString(),
+        endTime: end.toISOString(),
+        notes,
+        guestName,
+        guestEmail,
+        guestPhone,
+        accessCode,
+        status: 'PENDIENTE',
+        price: service.price,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creando reserva invitado:', error);
+      return res.status(500).json({ message: 'Error al crear reserva' });
+    }
 
     await sendConfirmationEmail(guestEmail, reservation, accessCode);
     res.status(201).json({ message: 'Reserva creada', accessCode });
@@ -128,7 +172,6 @@ const createGuestReservation = async (req, res) => {
   }
 };
 
-// POST /api/reservations/business/:businessId/manual — HU12 admin
 const createAdminReservation = async (req, res) => {
   try {
     const { businessId } = req.params;
@@ -146,55 +189,63 @@ const createAdminReservation = async (req, res) => {
       return res.status(400).json({ message: 'Debes seleccionar cliente o completar datos de invitado' });
     }
 
-    const service = await prisma.service.findUnique({ where: { id: serviceId } });
+    const { data: services } = await supabase.from('Service').select('*').eq('id', serviceId).limit(1);
+    const service = services?.[0];
     if (!service) return res.status(404).json({ message: 'Servicio no encontrado' });
 
     const start = new Date(startTime);
     const end = new Date(start.getTime() + service.duration * 60000);
 
-    const conflict = await prisma.reservation.findFirst({
-      where: {
-        businessId,
-        employeeId: employeeId || undefined,
-        status: { not: 'CANCELADA' },
-        startTime: { lt: end },
-        endTime: { gt: start }
-      }
-    });
-    if (conflict) return res.status(409).json({ message: 'El horario ya no está disponible' });
+    let query = supabase
+      .from('Reservation')
+      .select('id')
+      .eq('businessId', businessId)
+      .neq('status', 'CANCELADA')
+      .lt('startTime', end.toISOString())
+      .gt('endTime', start.toISOString());
+
+    if (employeeId) query = query.eq('employeeId', employeeId);
+
+    const { data: existing } = await query.limit(1);
+
+    if (existing && existing.length > 0) {
+      return res.status(409).json({ message: 'El horario ya no está disponible' });
+    }
 
     let accessCode = null;
     if (!clientId) {
       accessCode = crypto.randomInt(100000, 999999).toString();
     }
 
-    const reservation = await prisma.reservation.create({
-      data: {
+    const { data: reservation, error } = await supabase
+      .from('Reservation')
+      .insert({
         businessId,
         serviceId,
         clientId: clientId || null,
         employeeId: employeeId || null,
-        startTime: start,
-        endTime: end,
+        startTime: start.toISOString(),
+        endTime: end.toISOString(),
         notes: notes || null,
         guestName: clientId ? null : guestName,
         guestEmail: clientId ? null : guestEmail,
         guestPhone: clientId ? null : guestPhone,
         accessCode,
         price: service.price,
-        status: 'PENDIENTE'
-      },
-      include: {
-        service: true,
-        business: true,
-        employee: true,
-        client: true
-      }
-    });
+        status: 'PENDIENTE',
+      })
+      .select()
+      .single();
 
-    if (clientId && reservation.client?.email) {
-      await sendConfirmationEmail(reservation.client.email, reservation);
-    } else if (!clientId && guestEmail) {
+    if (error) {
+      console.error('Error creando reserva admin:', error);
+      return res.status(500).json({ message: 'Error al crear reserva manual' });
+    }
+
+    if (clientId) {
+      const { data: clientUser } = await supabase.from('User').select('email').eq('id', clientId).single();
+      if (clientUser?.email) await sendConfirmationEmail(clientUser.email, reservation);
+    } else if (guestEmail) {
       await sendConfirmationEmail(guestEmail, reservation, accessCode);
     }
 
@@ -205,7 +256,6 @@ const createAdminReservation = async (req, res) => {
   }
 };
 
-// GET /api/reservations/clients/search?q=... — HU12 helper
 const searchClients = async (req, res) => {
   try {
     const { q } = req.query;
@@ -215,143 +265,151 @@ const searchClients = async (req, res) => {
       return res.json([]);
     }
 
-    const users = await prisma.user.findMany({
-      where: {
-        role: 'CLIENTE',
-        OR: [
-          { name: { contains: term, mode: 'insensitive' } },
-          { email: { contains: term, mode: 'insensitive' } }
-        ]
-      },
-      select: { id: true, name: true, email: true },
-      orderBy: { createdAt: 'desc' },
-      take: 10
-    });
+    const { data: users } = await supabase
+      .from('User')
+      .select('id, name, email')
+      .eq('role', 'CLIENTE')
+      .or(`name.ilike.%${term}%,email.ilike.%${term}%`)
+      .order('createdAt', { ascending: false })
+      .limit(10);
 
-    res.json(users);
+    res.json(users || []);
   } catch (err) {
     console.error('Error searchClients:', err);
     res.status(500).json({ message: 'Error al buscar clientes' });
   }
 };
 
-// GET /api/reservations/my — HU10 historial cliente
 const getMyReservations = async (req, res) => {
   try {
     const { status, businessId } = req.query;
-    const reservations = await prisma.reservation.findMany({
-      where: {
-        OR: [
-          { clientId: req.user.id },
-          ...(req.user.email ? [{ guestEmail: req.user.email }] : [])
-        ],
-        ...(status && { status }),
-        ...(businessId && { businessId })
-      },
-      include: { service: true, business: true, employee: true },
-      orderBy: { startTime: 'desc' }
-    });
-    res.json(reservations);
+
+    let query = supabase
+      .from('Reservation')
+      .select('*')
+      .or(`clientId.eq.${req.user.id}`)
+      .order('startTime', { ascending: false });
+
+    if (status) query = query.eq('status', status);
+    if (businessId) query = query.eq('businessId', businessId);
+
+    const { data: reservations } = await query;
+    res.json(reservations || []);
   } catch (err) {
     console.error('Error getMyReservations:', err);
     res.status(500).json({ message: 'Error al obtener reservas' });
   }
 };
 
-// GET /api/reservations/employee — HU11 agenda empleado
 const getEmployeeReservations = async (req, res) => {
   try {
     const { date } = req.query;
-    const where = { employeeId: req.user.id, status: { not: 'CANCELADA' } };
+    const userId = req.user.id;
+
+    let query = supabase
+      .from('Reservation')
+      .select('*, service(*), client:UserId!ClientId(*), employee:UserId!EmployeeId(*)')
+      .eq('employeeId', userId)
+      .neq('status', 'CANCELADA')
+      .order('startTime', { ascending: true });
+
     if (date) {
-      where.startTime = {
-        gte: new Date(`${date}T00:00:00`),
-        lte: new Date(`${date}T23:59:59`)
-      };
+      const dayStart = new Date(`${date}T00:00:00`).toISOString();
+      const dayEnd = new Date(`${date}T23:59:59`).toISOString();
+      query = query.gte('startTime', dayStart).lte('startTime', dayEnd);
     }
-    const reservations = await prisma.reservation.findMany({
-      where,
-      include: { service: true, client: { select: { name: true, email: true } } },
-      orderBy: { startTime: 'asc' }
-    });
-    res.json(reservations);
+
+    const { data: reservations } = await query;
+    res.json(reservations || []);
   } catch (err) {
     console.error('Error getEmployeeReservations:', err);
     res.status(500).json({ message: 'Error al obtener agenda' });
   }
 };
 
-// GET /api/reservations/business/:businessId — HU12 admin
 const getBusinessReservations = async (req, res) => {
   try {
     const { date, status } = req.query;
-    const where = { businessId: req.params.businessId };
-    if (status) where.status = status;
+    const { businessId } = req.params;
+
+    let query = supabase
+      .from('Reservation')
+      .select('*, service:ServiceId(*), employee:EmployeeId(*), client:ClientId(*)')
+      .eq('businessId', businessId)
+      .order('startTime', { ascending: true });
+
+    if (status) query = query.eq('status', status);
     if (date) {
-      where.startTime = {
-        gte: new Date(`${date}T00:00:00`),
-        lte: new Date(`${date}T23:59:59`)
-      };
+      const dayStart = new Date(`${date}T00:00:00`).toISOString();
+      const dayEnd = new Date(`${date}T23:59:59`).toISOString();
+      query = query.gte('startTime', dayStart).lte('startTime', dayEnd);
     }
-    const reservations = await prisma.reservation.findMany({
-      where,
-      include: {
-        service: true,
-        employee: { select: { name: true } },
-        client: { select: { name: true, email: true } }
-      },
-      orderBy: { startTime: 'asc' }
-    });
-    res.json(reservations);
+
+    const { data: reservations } = await query;
+    res.json(reservations || []);
   } catch (err) {
     console.error('Error getBusinessReservations:', err);
     res.status(500).json({ message: 'Error al obtener reservas' });
   }
 };
 
-// PATCH /api/reservations/:id/cancel — HU9
 const cancelReservation = async (req, res) => {
   try {
-    const reservation = await prisma.reservation.findUnique({ where: { id: req.params.id } });
-    if (!reservation) return res.status(404).json({ message: 'Reserva no encontrada' });
+    const { data: reservations } = await supabase.from('Reservation').select('*').eq('id', req.params.id).limit(1);
 
-    // Política: solo hasta 2 horas antes
+    const reservation = reservations?.[0];
+    if (!reservation) {
+      return res.status(404).json({ message: 'Reserva no encontrada' });
+    }
+
     const hoursUntil = (new Date(reservation.startTime) - new Date()) / 3600000;
-    if (hoursUntil < 2)
+    if (hoursUntil < 2) {
       return res.status(400).json({ message: 'No puedes cancelar con menos de 2 horas de anticipación' });
+    }
 
-    await prisma.reservation.update({
-      where: { id: req.params.id },
-      data: { status: 'CANCELADA' }
-    });
+    const { error } = await supabase.from('Reservation').update({ status: 'CANCELADA' }).eq('id', req.params.id);
+
+    if (error) {
+      console.error('Error cancelando reserva:', error);
+      return res.status(500).json({ message: 'Error al cancelar' });
+    }
+
     res.json({ message: 'Reserva cancelada' });
   } catch (err) {
     console.error('Error cancelReservation:', err);
-    res.status(500).json({ message: 'Error al cancelar reserva' });
+    res.status(500).json({ message: 'Error al cancelar' });
   }
 };
 
-// PATCH /api/reservations/:id/reschedule — HU9
 const rescheduleReservation = async (req, res) => {
   try {
     const { startTime } = req.body;
-    const reservation = await prisma.reservation.findUnique({
-      where: { id: req.params.id },
-      include: { service: true }
-    });
-    if (!reservation) return res.status(404).json({ message: 'Reserva no encontrada' });
+
+    const { data: reservations } = await supabase.from('Reservation').select('*, service:ServiceId(*)').eq('id', req.params.id).limit(1);
+
+    const reservation = reservations?.[0];
+    if (!reservation) {
+      return res.status(404).json({ message: 'Reserva no encontrada' });
+    }
 
     const hoursUntil = (new Date(reservation.startTime) - new Date()) / 3600000;
-    if (hoursUntil < 2)
+    if (hoursUntil < 2) {
       return res.status(400).json({ message: 'No puedes reprogramar con menos de 2 horas de anticipación' });
+    }
 
     const start = new Date(startTime);
-    const end   = new Date(start.getTime() + reservation.service.duration * 60000);
+    const end = new Date(start.getTime() + (reservation.service?.duration || 0) * 60000);
 
-    await prisma.reservation.update({
-      where: { id: req.params.id },
-      data: { startTime: start, endTime: end }
-    });
+    const { error } = await supabase
+      .from('Reservation')
+      .update({ startTime: start.toISOString(), endTime: end.toISOString() })
+      .eq('id', req.params.id);
+
+    if (error) {
+      console.error('Error reprogramando reserva:', error);
+      return res.status(500).json({ message: 'Error al reprogramar' });
+    }
+
     res.json({ message: 'Reserva reprogramada' });
   } catch (err) {
     console.error('Error rescheduleReservation:', err);
@@ -359,14 +417,22 @@ const rescheduleReservation = async (req, res) => {
   }
 };
 
-// PATCH /api/reservations/:id/status — HU12 admin
 const updateReservationStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    const reservation = await prisma.reservation.update({
-      where: { id: req.params.id },
-      data: { status }
-    });
+
+    const { data: reservation, error } = await supabase
+      .from('Reservation')
+      .update({ status })
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error actualizando estado:', error);
+      return res.status(500).json({ message: 'Error al actualizar estado' });
+    }
+
     res.json(reservation);
   } catch (err) {
     console.error('Error updateReservationStatus:', err);
@@ -374,33 +440,62 @@ const updateReservationStatus = async (req, res) => {
   }
 };
 
-// GET /api/reservations/metrics/:businessId — HU13
 const getMetrics = async (req, res) => {
   try {
     const { businessId } = req.params;
     const today = new Date();
-    const startOfDay  = new Date(today.setHours(0,0,0,0));
-    const startOfWeek = new Date(today); startOfWeek.setDate(today.getDate() - today.getDay());
-    const startOfMonth= new Date(today.getFullYear(), today.getMonth(), 1);
+    today.setHours(0, 0, 0, 0);
+    const startOfDay = today.toISOString();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
-    const [totalDay, totalWeek, totalMonth, cancelled, byEmployee] = await Promise.all([
-      prisma.reservation.count({ where: { businessId, startTime: { gte: startOfDay } } }),
-      prisma.reservation.count({ where: { businessId, startTime: { gte: startOfWeek } } }),
-      prisma.reservation.count({ where: { businessId, startTime: { gte: startOfMonth } } }),
-      prisma.reservation.count({ where: { businessId, status: 'CANCELADA', startTime: { gte: startOfMonth } } }),
-      prisma.reservation.groupBy({
-        by: ['employeeId'],
-        where: { businessId, startTime: { gte: startOfMonth }, status: { not: 'CANCELADA' } },
-        _count: { id: true }
-      })
-    ]);
+    const { count: totalDay } = await supabase
+      .from('Reservation')
+      .select('*', { count: 'exact', head: true })
+      .eq('businessId', businessId)
+      .gte('startTime', startOfDay);
+
+    const { count: totalWeek } = await supabase
+      .from('Reservation')
+      .select('*', { count: 'exact', head: true })
+      .eq('businessId', businessId)
+      .gte('startTime', startOfWeek.toISOString());
+
+    const { count: totalMonth } = await supabase
+      .from('Reservation')
+      .select('*', { count: 'exact', head: true })
+      .eq('businessId', businessId)
+      .gte('startTime', startOfMonth.toISOString());
+
+    const { count: cancelledCount } = await supabase
+      .from('Reservation')
+      .select('*', { count: 'exact', head: true })
+      .eq('businessId', businessId)
+      .eq('status', 'CANCELADA')
+      .gte('startTime', startOfMonth.toISOString());
+
+    const { data: byEmployeeData } = await supabase
+      .from('Reservation')
+      .select('employeeId')
+      .eq('businessId', businessId)
+      .gte('startTime', startOfMonth.toISOString())
+      .neq('status', 'CANCELADA');
+
+    const byEmployeeMap = {};
+    (byEmployeeData || []).forEach((r) => {
+      if (r.employeeId) {
+        byEmployeeMap[r.employeeId] = (byEmployeeMap[r.employeeId] || 0) + 1;
+      }
+    });
+    const byEmployee = Object.entries(byEmployeeMap).map(([employeeId, count]) => ({ employeeId, count }));
 
     res.json({
-      today: totalDay,
-      week: totalWeek,
-      month: totalMonth,
-      cancellationRate: totalMonth > 0 ? ((cancelled / totalMonth) * 100).toFixed(1) : 0,
-      byEmployee
+      today: totalDay || 0,
+      week: totalWeek || 0,
+      month: totalMonth || 0,
+      cancellationRate: totalMonth > 0 ? ((cancelledCount / totalMonth) * 100).toFixed(1) : 0,
+      byEmployee,
     });
   } catch (err) {
     console.error('Error getMetrics:', err);
@@ -408,39 +503,34 @@ const getMetrics = async (req, res) => {
   }
 };
 
-// GET /api/reservations/export/:businessId?format=xlsx|pdf — HU25
 const exportReservations = async (req, res) => {
   try {
     const { businessId } = req.params;
     const { format = 'xlsx', startDate, endDate } = req.query;
 
-    let where = { businessId, status: { not: 'CANCELADA' } };
+    let query = supabase
+      .from('Reservation')
+      .select('*, service:ServiceId(*), employee:EmployeeId(*), client:ClientId(*)')
+      .neq('status', 'CANCELADA')
+      .eq('businessId', businessId);
+
     if (startDate || endDate) {
-      where.startTime = {};
-      if (startDate) where.startTime.gte = new Date(startDate);
-      if (endDate) where.startTime.lte = new Date(`${endDate}T23:59:59`);
+      if (startDate) query = query.gte('startTime', new Date(startDate).toISOString());
+      if (endDate) query = query.lte('startTime', new Date(`${endDate}T23:59:59`).toISOString());
     }
 
-    const reservations = await prisma.reservation.findMany({
-      where,
-      include: {
-        service: { select: { name: true, price: true } },
-        employee: { select: { name: true } },
-        client: { select: { name: true, email: true } }
-      },
-      orderBy: { startTime: 'desc' }
-    });
+    const { data: reservations } = await query.order('startTime', { ascending: false });
 
-    const data = reservations.map(r => ({
-      'Fecha': new Date(r.startTime).toLocaleDateString('es-EC'),
-      'Hora': new Date(r.startTime).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }),
-      'Servicio': r.service?.name || 'N/A',
-      'Precio': r.price || r.service?.price || 0,
-      'Cliente': r.client?.name || r.guestName || 'Invitado',
-      'Email': r.client?.email || r.guestEmail || 'N/A',
-      'Teléfono': r.client?.email ? '' : (r.guestPhone || 'N/A'),
-      'Empleado': r.employee?.name || 'No asignado',
-      'Estado': r.status
+    const data = (reservations || []).map((r) => ({
+      Fecha: new Date(r.startTime).toLocaleDateString('es-EC'),
+      Hora: new Date(r.startTime).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }),
+      Servicio: r.service?.name || 'N/A',
+      Precio: r.price || r.service?.price || 0,
+      Cliente: r.client?.name || r.guestName || 'Invitado',
+      Email: r.client?.email || r.guestEmail || 'N/A',
+      Telefono: r.client?.email ? '' : r.guestPhone || 'N/A',
+      Empleado: r.employee?.name || 'No asignado',
+      Estado: r.status,
     }));
 
     if (format === 'xlsx') {
@@ -478,7 +568,7 @@ const exportReservations = async (req, res) => {
 
       doc.font('Helvetica').fontSize(9);
       let y = tableTop + 20;
-      data.slice(0, 50).forEach(row => {
+      data.slice(0, 50).forEach((row) => {
         if (y > 700) { doc.addPage(); y = 50; }
         x = 50;
         const values = [row.Fecha, row.Hora, row.Servicio, `$${row.Precio}`, row.Cliente];
@@ -500,7 +590,6 @@ const exportReservations = async (req, res) => {
   }
 };
 
-// GET /api/reservations/income/:businessId?period=month — HU26
 const getIncomeReport = async (req, res) => {
   try {
     const { businessId } = req.params;
@@ -509,28 +598,28 @@ const getIncomeReport = async (req, res) => {
     let startDate;
     const now = new Date();
     if (period === 'day') {
-      startDate = new Date(now.setHours(0, 0, 0, 0));
+      startDate = new Date(now.setHours(0, 0, 0, 0)).toISOString();
     } else if (period === 'week') {
       startDate = new Date(now);
       startDate.setDate(now.getDate() - now.getDay());
+      startDate.setHours(0, 0, 0, 0);
+      startDate = startDate.toISOString();
     } else {
-      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     }
 
-    const reservations = await prisma.reservation.findMany({
-      where: {
-        businessId,
-        status: 'COMPLETADA',
-        startTime: { gte: startDate }
-      },
-      include: { service: true }
-    });
+    const { data: reservations } = await supabase
+      .from('Reservation')
+      .select('*, service:ServiceId(*)')
+      .eq('businessId', businessId)
+      .eq('status', 'COMPLETADA')
+      .gte('startTime', startDate);
 
     let totalIncome = 0;
     const byService = {};
     const byDay = {};
 
-    reservations.forEach(r => {
+    (reservations || []).forEach((r) => {
       const price = r.price || r.service?.price || 0;
       totalIncome += price;
 
@@ -543,13 +632,12 @@ const getIncomeReport = async (req, res) => {
 
     res.json({
       period,
-      startDate: startDate.toISOString(),
+      startDate,
       totalIncome: parseFloat(totalIncome.toFixed(2)),
-      totalReservations: reservations.length,
-      averagePerReservation: reservations.length > 0
-        ? parseFloat((totalIncome / reservations.length).toFixed(2)) : 0,
+      totalReservations: reservations?.length || 0,
+      averagePerReservation: reservations?.length > 0 ? parseFloat((totalIncome / reservations.length).toFixed(2)) : 0,
       byService,
-      byDay
+      byDay,
     });
   } catch (err) {
     console.error('Error getIncomeReport:', err);
@@ -558,10 +646,18 @@ const getIncomeReport = async (req, res) => {
 };
 
 module.exports = {
-  getSlots, createReservation, createGuestReservation,
+  getSlots,
+  createReservation,
+  createGuestReservation,
   createAdminReservation,
   searchClients,
-  getMyReservations, getEmployeeReservations, getBusinessReservations,
-  cancelReservation, rescheduleReservation, updateReservationStatus, getMetrics,
-  exportReservations, getIncomeReport
+  getMyReservations,
+  getEmployeeReservations,
+  getBusinessReservations,
+  cancelReservation,
+  rescheduleReservation,
+  updateReservationStatus,
+  getMetrics,
+  exportReservations,
+  getIncomeReport,
 };

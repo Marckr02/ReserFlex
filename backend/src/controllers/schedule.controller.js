@@ -1,12 +1,13 @@
-const prisma = require('../lib/prisma');
+const supabase = require('../lib/supabase');
 
-// GET /api/schedules/:businessId
 const getSchedules = async (req, res) => {
   try {
-    const schedules = await prisma.schedule.findMany({
-      where: { businessId: req.params.businessId },
-      orderBy: { dayOfWeek: 'asc' }
-    });
+    const { data: schedules } = await supabase
+      .from('Schedule')
+      .select('*')
+      .eq('businessId', req.params.businessId)
+      .order('dayOfWeek', { ascending: true });
+
     res.json(schedules);
   } catch (err) {
     console.error('Error getSchedules:', err);
@@ -14,20 +15,21 @@ const getSchedules = async (req, res) => {
   }
 };
 
-// PUT /api/schedules/:businessId — upsert completo de la semana
 const upsertSchedules = async (req, res) => {
   try {
     const { businessId } = req.params;
-    const { schedules } = req.body; // array de { dayOfWeek, startTime, endTime, isActive }
+    const { schedules } = req.body;
 
-    const ops = schedules.map(s =>
-      prisma.schedule.upsert({
-        where: { businessId_dayOfWeek: { businessId, dayOfWeek: s.dayOfWeek } },
-        update: { startTime: s.startTime, endTime: s.endTime, isActive: s.isActive },
-        create: { businessId, ...s }
-      })
+    const ops = schedules.map((s) =>
+      supabase
+        .from('Schedule')
+        .upsert(
+          { businessId, dayOfWeek: s.dayOfWeek, startTime: s.startTime, endTime: s.endTime, isActive: s.isActive },
+          { onConflict: 'businessId,dayOfWeek' }
+        )
     );
-    await prisma.$transaction(ops);
+
+    await Promise.all(ops);
     res.json({ message: 'Horarios actualizados correctamente' });
   } catch (err) {
     console.error('Error upsertSchedules:', err);

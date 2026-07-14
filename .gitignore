@@ -3,8 +3,11 @@ dist
 .env
 .env.*
 !.env.example
-backend/
 *.log
 .DS_Store
 .vscode
 .vercel
+
+# Ignorar solo node_modules dentro de backend, no toda la carpeta
+backend/node_modules/
+backend/.env
